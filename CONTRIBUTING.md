@@ -69,7 +69,10 @@ more than one kind of page (an article, a form, a data table).
 
 - One feature per PR
 - Test on real sites
-- `npm test` must pass
+- `npm test` and `npm run check:loadable` must pass; both run on a bare
+  checkout with no install
+- If you touched a manifest, a service worker or a committed bundle, run
+  `npm run check:chrome` too (needs Chrome and one `npm ci`)
 - Describe who benefits (which disability/profile)
 - The committed bundles are the runnable state. Do not hand-edit a
   `*.bundle.js` or a generated `personalized-extension/extension/lib/` file;

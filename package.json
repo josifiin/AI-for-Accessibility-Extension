@@ -7,6 +7,10 @@
   },
   "scripts": {
     "test": "node personalized-extension/test/librarian-test.js",
-    "check:loadable": "node scripts/check-extensions-loadable.mjs"
+    "check:loadable": "node scripts/check-extensions-loadable.mjs",
+    "check:chrome": "node scripts/check-extensions-load-in-chrome.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.42.0"
   }
 }
