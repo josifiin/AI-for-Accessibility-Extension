@@ -64,7 +64,11 @@
       setStatus('Enter both a server URL and an access token before saving — or use "Use local (clear)" to go back to local mode.', 'error');
       return;
     }
-    if (!RemoteLibrarian.isAllowedServerUrl(url)) {
+    if (!window.RemoteLibrarian) {
+      setStatus('Saving is unavailable (remote-librarian.js did not load).', 'error');
+      return;
+    }
+    if (!window.RemoteLibrarian.isAllowedServerUrl(url)) {
       setStatus('Server URL must use https:// (plain http:// is allowed only for localhost, because the access token and your profile are sent to this address).', 'error');
       return;
     }

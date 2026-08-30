@@ -24,6 +24,9 @@
   // The bearer token and Librarian payloads (including the profile) go to
   // this URL, so plaintext transport is only acceptable to the machine
   // itself: https anywhere, http only on loopback (local development).
+  // Exact spellings only, on purpose: other 127/8 addresses, `localhost.`,
+  // and `[::ffff:127.0.0.1]` are rejected. That strictness costs only local
+  // dev convenience and keeps the check auditable.
   // No `new URL()` here: this file also runs in the test harness's bare vm
   // sandbox, which has no URL constructor (see the header comment).
   function isAllowedServerUrl(url) {

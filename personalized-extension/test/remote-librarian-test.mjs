@@ -134,6 +134,42 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
   return { run: sandbox.__seed, sync, local };
 }
 
+// ---- run background.js's remoteIfConfigured against a fake chrome.storage --
+// Same source-lifting approach as loadSeeder: the function only touches the
+// two sync keys, the module-level cache/seed vars (declared in the prelude
+// here), and globalThis.RemoteLibrarian (the real file, loaded first).
+function loadRemoteResolver({ sync = {} }) {
+  const bgSrc = fs.readFileSync(path.join(EXT_DIR, 'background.js'), 'utf8');
+  const start = bgSrc.indexOf('async function remoteIfConfigured()');
+  const end = bgSrc.indexOf('\n// Shared resolver', start);
+  if (start === -1 || end === -1) throw new Error('could not locate remoteIfConfigured in background.js');
+
+  const store = { ...sync };
+  const sandbox = {
+    console: { log() {}, warn() {} },
+    fetch,
+    chrome: {
+      storage: {
+        sync: {
+          get: async (keys) => {
+            const out = {};
+            for (const k of [].concat(keys)) if (k in store) out[k] = store[k];
+            return out;
+          },
+        },
+      },
+    },
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(EXT_DIR, 'remote-librarian.js'), 'utf8'),
+    sandbox, { filename: 'remote-librarian.js' });
+  vm.runInContext(
+    'var _remoteSeeded = Promise.resolve(); var _remoteLibrarianCache;\n'
+      + bgSrc.slice(start, end) + '\nglobalThis.__resolve = remoteIfConfigured;',
+    sandbox, { filename: 'background.js#remoteIfConfigured' });
+  return sandbox.__resolve;
+}
+
 (async () => {
   const server = await startServer();
   const { port } = server.address();
@@ -312,6 +348,17 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
   await noDefaults.run();
   check('seed: no baked config (fresh clone) is a no-op, not a crash',
     Object.keys(noDefaults.sync).length === 0 && Object.keys(noDefaults.local).length === 0);
+
+  // 14. remoteIfConfigured: a stored plain-http URL (legal before the https
+  //     rule, and still arriving via Chrome Sync from an older install) must
+  //     degrade to local mode (null), not yield a facade whose every method
+  //     throws "not configured".
+  const refused = loadRemoteResolver({ sync: { toolkitServerUrl: 'http://myserver.example', toolkitServerToken: 'aat_old' } });
+  check('remoteIfConfigured: refused stored URL falls back to local (null)', (await refused()) === null);
+  const accepted = loadRemoteResolver({ sync: { toolkitServerUrl: BASE, toolkitServerToken: TOKEN } });
+  const acceptedLib = await accepted();
+  check('remoteIfConfigured: loopback http config still yields the remote facade',
+    !!acceptedLib && typeof acceptedLib.getProfile === 'function');
 
   server.close();
   console.log(`\n${pass} passed, ${fail} failed`);

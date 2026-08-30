@@ -160,6 +160,13 @@ async function remoteIfConfigured() {
     return _remoteLibrarianCache;
   }
   globalThis.RemoteLibrarian.configure({ url, token });
+  if (!globalThis.RemoteLibrarian.isConfigured()) {
+    // configure() refused the stored URL (https required except loopback).
+    // Fall back to local mode; caching the facade anyway would make every
+    // Librarian call throw instead of degrading.
+    _remoteLibrarianCache = null;
+    return _remoteLibrarianCache;
+  }
   _remoteLibrarianCache = globalThis.RemoteLibrarian.asLibrarian();
   return _remoteLibrarianCache;
 }
