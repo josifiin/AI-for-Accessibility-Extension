@@ -30,3 +30,12 @@ jobs:
       # README's "Builds and tests" section.
       - name: Librarian regression tests
         run: npm test
+
+      # Both extensions load unpacked from what is committed here, so the
+      # thing most worth checking is that a fresh checkout is complete:
+      # every manifest entry point, service-worker importScripts target and
+      # page asset resolves to a file. Loading them in a real Chrome would
+      # check more; this catches the failure that actually happened, which
+      # was a build output the commit never contained.
+      - name: Both extensions load from a fresh checkout
+        run: npm run check:loadable

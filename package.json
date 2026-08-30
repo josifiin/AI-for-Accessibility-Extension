@@ -6,6 +6,7 @@
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
   "scripts": {
-    "test": "node personalized-extension/test/librarian-test.js"
+    "test": "node personalized-extension/test/librarian-test.js",
+    "check:loadable": "node scripts/check-extensions-loadable.mjs"
   }
 }
