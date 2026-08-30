@@ -17,6 +17,13 @@
 // URL, so the check does not depend on the network. Content scripts match
 // <all_urls>, which covers http://127.0.0.1 but not about:blank or data:.
 //
+// A service-worker target existing proves only that Chrome created the worker
+// context, not that the worker's own startup script ran to the end. So before
+// loading anything we turn on Target.setAutoAttach with waitForDebuggerOnStart,
+// which holds each new worker before its first statement until we have a
+// Runtime.exceptionThrown listener on it. An exception anywhere in startup then
+// reaches us instead of being swallowed.
+//
 // Chrome comes from CHROME_PATH, or the usual install locations. Requires
 // puppeteer-core, the only dependency this repository installs, and only for
 // this check: `npm test` and `npm run check:loadable` still run on a bare
@@ -72,7 +79,9 @@ const TEST_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <p>A paragraph, <a href="#x">a link</a>, and <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt=""> an image.</p>
 <button type="button">A button</button></body></html>`;
 
+/** @type {{ name: string, message: string }[]} */
 const failures = [];
+const fail = (name, message) => failures.push({ name, message });
 
 const server = http.createServer((_req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -100,11 +109,36 @@ for (const { name, dir, globals } of EXTENSIONS) {
     });
 
     const cdp = await browser.target().createCDPSession();
+
+    // Every uncaught exception any service worker throws, startup included.
+    // The listener is in place before Extensions.loadUnpacked below, and every
+    // worker is held at its first statement until we resume it, so there is no
+    // window in which an early throw could be missed.
+    const workerErrors = [];
+    cdp.on('Target.attachedToTarget', async ({ sessionId, targetInfo, waitingForDebugger }) => {
+      const session = cdp.connection().session(sessionId);
+      if (!session) return;
+      try {
+        if (targetInfo.type === 'service_worker') {
+          session.on('Runtime.exceptionThrown', ({ exceptionDetails: d }) => {
+            workerErrors.push((d.exception?.description || d.text).split('\n').slice(0, 2).join(' '));
+          });
+          await session.send('Runtime.enable');
+        }
+      } catch {
+        // An unusable session is reported by the assertions below, not here.
+      } finally {
+        // Always resume, or a worker we failed to instrument hangs forever.
+        if (waitingForDebugger) await session.send('Runtime.runIfWaitingForDebugger').catch(() => {});
+      }
+    });
+    await cdp.send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: true, flatten: true });
+
     let id;
     try {
       ({ id } = await cdp.send('Extensions.loadUnpacked', { path: absDir }));
     } catch (e) {
-      failures.push(`${name}: Chrome refused to load it. ${e.message.split('\n')[0]}`);
+      fail(name, `Chrome refused to load it. ${e.message.split('\n')[0]}`);
       continue;
     }
     console.log(`  loaded, id ${id}`);
@@ -114,7 +148,7 @@ for (const { name, dir, globals } of EXTENSIONS) {
       .waitForTarget((t) => t.type() === 'service_worker' && t.url().includes(id), { timeout: 20000 })
       .catch(() => null);
     if (!sw) {
-      failures.push(`${name}: service worker never started.`);
+      fail(name, `service worker never started.`);
       continue;
     }
     console.log('  service worker running');
@@ -125,12 +159,13 @@ for (const { name, dir, globals } of EXTENSIONS) {
         .evaluate((names) => Object.fromEntries(names.map((n) => [n, typeof globalThis[n]])), globals)
         .catch((e) => ({ __error: String(e).split('\n')[0] }));
       if (found.__error) {
-        failures.push(`${name}: could not read service-worker globals. ${found.__error}`);
+        fail(name, `could not read service-worker globals. ${found.__error}`);
       } else {
         const missing = globals.filter((n) => found[n] === 'undefined');
         if (missing.length > 0) {
-          failures.push(
-            `${name}: service worker started but ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} undefined. ` +
+          fail(
+            name,
+            `service worker started but ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} undefined. ` +
               'A script it imports is missing or threw.'
           );
         } else {
@@ -149,12 +184,24 @@ for (const { name, dir, globals } of EXTENSIONS) {
     // Content scripts run at document_idle, and this one has work to do.
     await new Promise((r) => setTimeout(r, 4000));
     if (pageErrors.length > 0) {
-      failures.push(`${name}: ${pageErrors.length} error(s) on a plain page:\n      ${pageErrors.slice(0, 6).join('\n      ')}`);
+      fail(name, `${pageErrors.length} error(s) on a plain page:\n      ${pageErrors.slice(0, 6).join('\n      ')}`);
     } else {
       console.log('  no errors on a plain page');
     }
+
+    // Last, because a startup exception can surface after the worker target
+    // appears and after the page settles.
+    if (workerErrors.length > 0) {
+      fail(
+        name,
+        `${workerErrors.length} uncaught error(s) in the service worker:\n      ` +
+          workerErrors.slice(0, 6).join('\n      ')
+      );
+    } else {
+      console.log('  service worker startup threw nothing');
+    }
   } catch (e) {
-    failures.push(`${name}: check could not run. ${e.message.split('\n')[0]}`);
+    fail(name, `check could not run. ${e.message.split('\n')[0]}`);
   } finally {
     if (browser) await browser.close().catch(() => {});
   }
@@ -163,10 +210,15 @@ for (const { name, dir, globals } of EXTENSIONS) {
 server.close();
 
 if (failures.length > 0) {
-  console.error(`\n${failures.length} extension(s) did not load cleanly:\n`);
-  for (const f of failures) console.error(`  ${f}`);
+  const affected = new Set(failures.map((f) => f.name)).size;
   console.error(
-    '\nBoth extensions load unpacked from what is committed here. Reproduce\n' +
+    `\n${affected} of ${EXTENSIONS.length} extensions did not load cleanly ` +
+      `(${failures.length} failure${failures.length === 1 ? '' : 's'}):\n`
+  );
+  for (const f of failures) console.error(`  ${f.name}: ${f.message}`);
+  console.error(
+    '\nBoth extensions are expected to load unpacked from what is committed\n' +
+      'here, so this is a defect in the tree, not in the check. Reproduce\n' +
       'locally with `npm run check:chrome`, or by hand: chrome://extensions,\n' +
       'Developer mode, Load unpacked.\n'
   );
