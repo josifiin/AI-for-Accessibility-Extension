@@ -1,6 +1,11 @@
 # Troubleshooting
 
-Common issues and solutions for the AI for Accessibility Toolkit.
+Common issues and solutions for the two extensions in this repository.
+
+Both extensions load unpacked from what is committed here, so most fixes below
+are a reload rather than a rebuild. Rebuilding happens in the toolkit
+repository, where the code the bundles are built from is canonical. See
+"Rebuilding" at the end.
 
 ## Chrome Extension
 
@@ -11,8 +16,12 @@ Common issues and solutions for the AI for Accessibility Toolkit.
 **Solutions:**
 1. Verify extension is enabled at `chrome://extensions`
 2. Check for manifest errors in the extension card
-3. Rebuild: `npm run build`
-4. Reload the extension after building
+3. Confirm you loaded the right folder: `extension/` for the original
+   extension, `personalized-extension/extension/` for the personalized one
+4. Reload the extension, then reload the page you are testing on
+5. If Chrome reports a missing file, run `npm run check:loadable` from the
+   repository root. It resolves every file the two manifests and service
+   workers reference, and names any that a checkout does not contain
 
 ### AI features not working
 
@@ -41,36 +50,19 @@ Common issues and solutions for the AI for Accessibility Toolkit.
 **Symptoms:** Red errors in browser console mentioning `content.bundle.js`.
 
 **Solutions:**
-1. Rebuild: `npm run build`
-2. Check `extension/src/content.js` for syntax errors
-3. Reload extension and refresh the page
+1. Reload the extension, then refresh the page
+2. Check the page is not one Chrome blocks content scripts on
+   (`chrome://` pages, the Chrome Web Store)
+3. `extension/content.bundle.js` is a committed build output. If the bundle
+   itself is at fault, the source it is built from is in the toolkit
+   repository; see "Rebuilding"
 
 ## CLI
 
-### `ai4a11y: command not found`
-
-**Solutions:**
-1. Reinstall: `pip install -e .`
-2. Check your PATH includes pip's bin directory
-3. Try: `python -m ai4a11y.cli`
-
-### Browser session issues
-
-**Symptoms:** `session start` fails or browser doesn't launch.
-
-**Solutions:**
-1. Install Playwright browsers: `playwright install`
-2. Check for existing Playwright processes: `pkill -f playwright`
-3. Try with visible browser: session commands show a Chromium window by default
-
-### Claude API errors
-
-**Symptoms:** `ANTHROPIC_API_KEY not set` or API errors in describe/audit commands.
-
-**Solutions:**
-1. Set environment variable: `export ANTHROPIC_API_KEY=sk-...`
-2. Add to shell profile (`~/.bashrc`, `~/.zshrc`)
-3. Verify key at [Anthropic Console](https://console.anthropic.com/)
+The `ai4a11y` command line tool is not part of this repository. It is
+canonical in the [toolkit
+repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit),
+along with the auditors and adapters it drives.
 
 ## Voice/Text Control Web Apps
 
@@ -132,7 +124,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8080
 
 **Solutions:**
 1. Clear extension storage: DevTools → Application → Storage → Clear
-2. Rebuild: `cd personalized-extension && npm run build`
+2. Reload the extension at `chrome://extensions`, then start onboarding again
 3. Check for Gemini API key in the onboarding flow
 
 ### Custom skills not running
@@ -154,29 +146,42 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8080
 2. For AI-powered skills, choose "With AI" option (uses `chrome.runtime.sendMessage`)
 3. Review the generated code in the code viewer
 
-## Build Issues
+## Rebuilding
 
-### `npm run build` fails
+There is no build step in this repository. The bundles both extensions run
+are committed, and the code they are built from (`tools/`, `toolkit/`) is
+canonical in the [toolkit
+repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit).
+A change to an auditor, adapter, profile or the toolkit core is made there,
+and the refreshed bundles arrive here as a commit.
 
-**Solutions:**
-1. Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
-2. Check Node version: `node --version` (requires Node 20.19+)
-3. Review esbuild errors in terminal output
+Making this repository buildable on its own means consuming the toolkit core
+as a dependency instead of reading a sibling checkout. That work is planned
+and tracked as issue #2.
 
-### Missing dependencies
+### Checking a checkout is complete
 
-**Solutions:**
 ```bash
-npm install                    # Main extension
-cd personalized-extension && npm install
-pip install -e .               # CLI
+npm run check:loadable
 ```
+
+Resolves every file the two manifests and service workers reference. Use it
+after pulling, and before reporting that an extension will not load.
+
+### `npm test` fails
+
+**Solutions:**
+1. Check Node version: `node --version` (requires Node 20.19+)
+2. `npm test` runs the Librarian regression suite and needs no install. If it
+   fails on a fresh checkout, that is a real regression worth reporting
 
 ## Getting Help
 
 If your issue isn't listed:
 
-1. Search [existing issues](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/issues)
+1. Search this repository's issues for extension problems, and the [toolkit
+   repository's](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/issues)
+   for anything in the auditors, adapters, profiles or the toolkit core
 2. Open a new issue with:
    - Browser/OS version
    - Steps to reproduce

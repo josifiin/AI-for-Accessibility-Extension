@@ -9,7 +9,7 @@ canonical: <https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibil
 
 ## Start here
 
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — Common problems and fixes (setup, API keys, build).
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — Common problems and fixes (loading the extensions, API keys, where rebuilds happen).
 
 ## Feature docs (shipped behavior)
 
