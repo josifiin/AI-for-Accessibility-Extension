@@ -12,6 +12,15 @@ __pycache__/
 dist/
 build/
 *.egg
+
+# The `dist/` rule above is Python build output. The personalized extension
+# writes JavaScript the service worker loads with importScripts into
+# directories of the same name, and those outputs are committed like every
+# other bundle in this repository. The directories have to be re-included
+# first: git cannot un-ignore a file inside an ignored directory.
+!personalized-extension/extension/browser-harness/dist/
+!personalized-extension/extension/validation/dist/
+
 .claude/worktrees/
 
 # The analysis, copied in from the research repository by its install script.

@@ -1,5 +1,17 @@
 # Security Policy
 
+This policy covers the Chrome extensions in this repository. The toolkit
+library and its hosted service have their own policy in the toolkit
+repository.
+
+## Read this before installing adapters
+
+Custom adapters are **linted but not sandboxed**. They are registered as
+Chrome user scripts and run with full access to every page they touch. Only
+install adapters you trust, from people you trust. Adapters are written to be
+reversible, which means their page changes can be undone; it does not limit
+what a malicious adapter could read or do while it runs.
+
 ## Supported Versions
 
 | Version | Supported          |

@@ -1,45 +1,74 @@
-# AI for Accessibility Toolkit
+# AI for Accessibility Extension
 
-## Code Review Notes
-
-### Known Tradeoffs (DO NOT flag in reviews)
-
-1. **Gemini API key in URL query parameter** — This is required by the Gemini API when called from browser extensions. There's no alternative without adding a proxy server, which adds complexity and latency. Users are informed this is a client-side extension. This is an accepted tradeoff, not a security bug.
-
-2. **Acting-user partition: job anchoring (RESOLVED in Phase 3 inc 3)** (`toolkit/core/`) — The datastore's `partitionKey` isolation is total. The earlier gap — background jobs running against whatever partition was active at *fire*-time — is now closed: the debounced `extract` is anchored to the partition that enqueued it (skips on switch, the periodic net drains it later); `extract`/`reflect`/`requestGrant`/`importInsight`/`respondToProposal`/`recordScopedSettings` hold a slow-lane drain gate so `setActingUser` waits for in-flight writes; the cross-app entry points also capture+verify the partition. Migrations no longer mutate the shared `_actingUserId` (they run against an explicit partition-bound view), and a **migrate-on-activation** sweep keeps a named partition current. Two **accepted residual limitations** (prototype-scoped, first-party/mistakes-not-malice): (a) `setActingUser`'s drain wait has no timeout, so a hung LLM call in an in-flight `extract` can delay a partition switch — a host should give its LLM fetch an `AbortSignal` timeout; (b) cross-app insight proposals share the user's single weekly proposal budget with no per-source sub-cap, so a buggy granted app spamming distinct insight `kind`s could crowd out the user's own device-learned proposals for the week.
+This repository holds the browser-facing half of the project, split out of
+the toolkit repository with full history. The toolkit core, the tools
+catalog, and the hosted service are canonical in
+<https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit>;
+work on them belongs there, not here.
 
 ## Architecture
 
-- `tools/` — Shared JS code (auditors, adapters, profiles, utils)
-- `extension/` — Chrome extension (imports from tools/, bundles via esbuild)
-- `toolkit/` — Platform-agnostic core (Librarian, datastore, skill layer)
-- `cli/` — Python CLI with Playwright + Claude
-- `tools/utils/ai.js` — AI provider abstraction so same adapters work in both contexts
+- `extension/` — the original Chrome extension. Its content and popup
+  bundles are committed and were built from the toolkit repo's `tools/`
+  catalog; the source under `extension/src/` is the extension shell around
+  that catalog.
+- `personalized-extension/` — the richer extension: onboarding, memory
+  (Librarian), the Adapter Builder and Skill Builder, voice mode, an
+  in-extension browser harness. Its `extension/lib/{taxonomy,datastore,
+  librarian,tools-registry,skills-db}.js` are generated from toolkit source
+  and committed.
+- `webapp/` — two full-stack prototypes (text control, voice control) plus a
+  browser-harness port. Candidates to return to their originating teams.
+- `docs/` — extension-facing docs. `VENDORED.md` records third-party code.
+
+## Builds and tests
+
+The committed bundles are the runnable state. Full builds resolve paths into
+the toolkit repo's tree, so rebuilds happen there and land here as commits.
+Never hand-edit a `*.bundle.js` or a generated `lib/` file.
+
+```bash
+npm test               # Librarian regression suite; the one fully self-contained suite
+npm run check:loadable # every file the two manifests and service workers reference
+```
+
+`check:loadable` is what stops a build output going missing from a commit.
+Because nothing here rebuilds the bundles, an output that is absent, or
+caught by a `.gitignore` rule, is otherwise invisible until Chrome refuses
+to load the extension.
+
+## Known tradeoffs (context for reviewers)
+
+1. **Gemini API key in URL query parameter** — required by the Gemini API
+   when called from browser extensions; avoiding it needs a proxy server.
+   Users are told this is a client-side extension. An accepted tradeoff, not
+   a security bug.
+2. **Custom adapters are linted, not sandboxed** — they run as Chrome user
+   scripts with full page access. This is the repo's central disclosure; see
+   SECURITY.md. Do not weaken its wording.
+3. The acting-user partition and datastore lifecycle notes concern toolkit
+   core code and live in the toolkit repo's notes; the generated
+   `personalized-extension/extension/lib/` files embody that behavior but
+   are not the place to change it.
 
 ## Terminology
 
-- **Adapter** — the executable code that adapts a page. Developer-authored
-  ones live in `tools/adapters/`; users generate their own in the **Adapter
-  Builder** (`personalized-extension/extension/adapter-builder/`), which
-  writes real JS run as a user-script. Build one only for a capability no
-  adapter has yet.
+- **Adapter** — executable code that adapts a page. Developer-authored ones
+  live in the toolkit repo's `tools/adapters/`; users generate their own in
+  the **Adapter Builder** (`personalized-extension/extension/adapter-builder/`),
+  which writes real JS run as a user script. Build one only for a capability
+  no adapter has yet.
 - **Skill / `SKILL.md`** — a model-facing playbook that composes existing
   adapters into a recipe for a need. Built in the **Skill Builder**
   (`personalized-extension/extension/skill-builder/`) by the Engineer, or
-  hand-written in `toolkit/skills/builtin/`. No code. This is the common
-  case, and where onboarding sends the needs it couldn't cover — the Skill
-  Builder hands off to the Adapter Builder only when composition fails.
-- **Auditor** — code in `tools/auditors/` that finds issues for adapters to
-  fix.
+  hand-written in the toolkit repo's `toolkit/skills/builtin/`. No code.
+  This is the common case, and where onboarding sends the needs it couldn't
+  cover — the Skill Builder hands off to the Adapter Builder only when
+  composition fails.
+- **Auditor** — code that finds issues for adapters to fix; lives in the
+  toolkit repo's `tools/auditors/`.
 - *Internal identifiers in `personalized-extension/` (`customSkills`,
   `skillRegistry`, `openSkillBuilder` → the Adapter Builder,
   `openSkillManager` → the Skill Builder, `aa-custom-` user-script IDs,
   storage keys) still say "skill" from an earlier naming — renaming them
   needs a storage migration.*
-
-## Build
-
-```bash
-npm run build        # Build extension
-pip install -e .     # Install CLI
-```
