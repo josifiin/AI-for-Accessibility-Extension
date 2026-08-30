@@ -124,6 +124,10 @@ chrome.storage.onChanged?.addListener((changes, area) => {
 async function seedRemoteDefaults() {
   const d = globalThis.AA_REMOTE_DEFAULTS || {};
   if (!d.url || !d.token) return;
+  if (!globalThis.RemoteLibrarian?.isAllowedServerUrl?.(d.url)) {
+    console.warn('[AgenticA11y] refusing to seed remote server URL (https required except on localhost):', d.url);
+    return;
+  }
   try {
     const { toolkitRemoteSeeded } = await chrome.storage.local.get('toolkitRemoteSeeded');
     if (toolkitRemoteSeeded) return;
@@ -156,6 +160,13 @@ async function remoteIfConfigured() {
     return _remoteLibrarianCache;
   }
   globalThis.RemoteLibrarian.configure({ url, token });
+  if (!globalThis.RemoteLibrarian.isConfigured()) {
+    // configure() refused the stored URL (https required except loopback).
+    // Fall back to local mode; caching the facade anyway would make every
+    // Librarian call throw instead of degrading.
+    _remoteLibrarianCache = null;
+    return _remoteLibrarianCache;
+  }
   _remoteLibrarianCache = globalThis.RemoteLibrarian.asLibrarian();
   return _remoteLibrarianCache;
 }

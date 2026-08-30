@@ -125,9 +125,49 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
     AA_REMOTE_DEFAULTS: defaults,
   };
   vm.createContext(sandbox);
+  // The seeder consults RemoteLibrarian.isAllowedServerUrl before writing, so
+  // give the sandbox the real client, same as the service worker's importScripts.
+  vm.runInContext(fs.readFileSync(path.join(EXT_DIR, 'remote-librarian.js'), 'utf8'),
+    sandbox, { filename: 'remote-librarian.js' });
   vm.runInContext(bgSrc.slice(start, end) + '\nglobalThis.__seed = seedRemoteDefaults;', sandbox,
     { filename: 'background.js#seedRemoteDefaults' });
   return { run: sandbox.__seed, sync, local };
+}
+
+// ---- run background.js's remoteIfConfigured against a fake chrome.storage --
+// Same source-lifting approach as loadSeeder: the function only touches the
+// two sync keys, the module-level cache/seed vars (declared in the prelude
+// here), and globalThis.RemoteLibrarian (the real file, loaded first).
+function loadRemoteResolver({ sync = {} }) {
+  const bgSrc = fs.readFileSync(path.join(EXT_DIR, 'background.js'), 'utf8');
+  const start = bgSrc.indexOf('async function remoteIfConfigured()');
+  const end = bgSrc.indexOf('\n// Shared resolver', start);
+  if (start === -1 || end === -1) throw new Error('could not locate remoteIfConfigured in background.js');
+
+  const store = { ...sync };
+  const sandbox = {
+    console: { log() {}, warn() {} },
+    fetch,
+    chrome: {
+      storage: {
+        sync: {
+          get: async (keys) => {
+            const out = {};
+            for (const k of [].concat(keys)) if (k in store) out[k] = store[k];
+            return out;
+          },
+        },
+      },
+    },
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(EXT_DIR, 'remote-librarian.js'), 'utf8'),
+    sandbox, { filename: 'remote-librarian.js' });
+  vm.runInContext(
+    'var _remoteSeeded = Promise.resolve(); var _remoteLibrarianCache;\n'
+      + bgSrc.slice(start, end) + '\nglobalThis.__resolve = remoteIfConfigured;',
+    sandbox, { filename: 'background.js#remoteIfConfigured' });
+  return sandbox.__resolve;
 }
 
 (async () => {
@@ -281,6 +321,13 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
     fresh.sync.toolkitServerUrl === DEFAULTS.url && fresh.sync.toolkitServerToken === DEFAULTS.token);
   check('seed: fresh profile is marked seeded', fresh.local.toolkitRemoteSeeded === true);
 
+  // A build config pointing at a plain-http, non-loopback server must not be
+  // written: the bearer token would travel in cleartext to that address.
+  const insecure = loadSeeder({ defaults: { url: 'http://evil.example', token: 'aat_evil' } });
+  await insecure.run();
+  check('seed: a non-https, non-loopback default is refused, not written',
+    !('toolkitServerUrl' in insecure.sync) && !('toolkitServerToken' in insecure.sync));
+
   const configured = loadSeeder({
     defaults: DEFAULTS,
     sync: { toolkitServerUrl: 'https://mine.example', toolkitServerToken: 'aat_mine' },
@@ -301,6 +348,17 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
   await noDefaults.run();
   check('seed: no baked config (fresh clone) is a no-op, not a crash',
     Object.keys(noDefaults.sync).length === 0 && Object.keys(noDefaults.local).length === 0);
+
+  // 14. remoteIfConfigured: a stored plain-http URL (legal before the https
+  //     rule, and still arriving via Chrome Sync from an older install) must
+  //     degrade to local mode (null), not yield a facade whose every method
+  //     throws "not configured".
+  const refused = loadRemoteResolver({ sync: { toolkitServerUrl: 'http://myserver.example', toolkitServerToken: 'aat_old' } });
+  check('remoteIfConfigured: refused stored URL falls back to local (null)', (await refused()) === null);
+  const accepted = loadRemoteResolver({ sync: { toolkitServerUrl: BASE, toolkitServerToken: TOKEN } });
+  const acceptedLib = await accepted();
+  check('remoteIfConfigured: loopback http config still yields the remote facade',
+    !!acceptedLib && typeof acceptedLib.getProfile === 'function');
 
   server.close();
   console.log(`\n${pass} passed, ${fail} failed`);

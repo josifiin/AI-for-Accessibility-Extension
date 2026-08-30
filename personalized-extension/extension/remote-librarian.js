@@ -21,9 +21,43 @@
   // {url, token} once configure() has been called with both, else null.
   let _cfg = null;
 
+  // The bearer token and Librarian payloads (including the profile) go to
+  // this URL, so plaintext transport is only acceptable to the machine
+  // itself: https anywhere, http only on loopback (local development).
+  // Exact spellings only, on purpose: other 127/8 addresses, `localhost.`,
+  // and `[::ffff:127.0.0.1]` are rejected. That strictness costs only local
+  // dev convenience and keeps the check auditable.
+  // No `new URL()` here: this file also runs in the test harness's bare vm
+  // sandbox, which has no URL constructor (see the header comment).
+  function isAllowedServerUrl(url) {
+    const m = /^(https?):\/\/([^/?#]+)/i.exec((url || '').trim());
+    if (!m) return false;
+    if (m[1].toLowerCase() === 'https') return true;
+    let host = m[2];
+    const at = host.lastIndexOf('@');
+    if (at !== -1) host = host.slice(at + 1);
+    if (host.startsWith('[')) {
+      const close = host.indexOf(']');
+      host = close === -1 ? '' : host.slice(1, close);
+    } else {
+      const colon = host.indexOf(':');
+      if (colon !== -1) host = host.slice(0, colon);
+    }
+    host = host.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  }
+
   function configure({ url, token } = {}) {
     const u = (url || '').trim();
     const t = (token || '').trim();
+    if (u && t && !isAllowedServerUrl(u)) {
+      // Refuse rather than degrade: a synced or seeded http:// URL must not
+      // silently start receiving the token. Staying unconfigured keeps the
+      // extension in local mode.
+      console.warn('[RemoteLibrarian] refusing server URL (https required except on localhost):', u);
+      _cfg = null;
+      return;
+    }
     _cfg = (u && t) ? { url: u.replace(/\/+$/, ''), token: t } : null;
   }
 
@@ -182,5 +216,5 @@
     return facade;
   }
 
-  globalThis.RemoteLibrarian = { configure, isConfigured, call, whoami, asLibrarian };
+  globalThis.RemoteLibrarian = { configure, isConfigured, isAllowedServerUrl, call, whoami, asLibrarian };
 })();

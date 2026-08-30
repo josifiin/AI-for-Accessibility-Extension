@@ -64,13 +64,17 @@
       setStatus('Enter both a server URL and an access token before saving — or use "Use local (clear)" to go back to local mode.', 'error');
       return;
     }
-    if (!/^https?:\/\//i.test(url)) {
-      setStatus('Server URL must start with http:// or https://.', 'error');
+    if (!window.RemoteLibrarian) {
+      setStatus('Saving is unavailable (remote-librarian.js did not load).', 'error');
+      return;
+    }
+    if (!window.RemoteLibrarian.isAllowedServerUrl(url)) {
+      setStatus('Server URL must use https:// (plain http:// is allowed only for localhost, because the access token and your profile are sent to this address).', 'error');
       return;
     }
     await chrome.storage.sync.set({ toolkitServerUrl: url, toolkitServerToken: token });
     modeEl.textContent = describeMode({ toolkitServerUrl: url, toolkitServerToken: token });
-    setStatus('Saved. This device now uses the remote toolkit server.', 'success');
+    setStatus('Saved. Remote mode is on. This setting syncs to every Chrome signed into your Google account.', 'success');
     await syncClientToSaved();
   });
 
@@ -105,7 +109,7 @@
     tokenInput.value = '';
     window.RemoteLibrarian?.configure?.({});
     modeEl.textContent = describeMode({});
-    setStatus('Cleared. This device is back to local mode.', 'success');
+    setStatus('Cleared. Back to local mode, on every Chrome signed into your Google account.', 'success');
   });
 
   load();
