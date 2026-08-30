@@ -162,11 +162,14 @@ and tracked as issue #2.
 ### Checking a checkout is complete
 
 ```bash
-npm run check:loadable
+npm run check:loadable   # no install, no browser
+npm run check:chrome     # needs Chrome and `npm ci`
 ```
 
-Resolves every file the two manifests and service workers reference. Use it
-after pulling, and before reporting that an extension will not load.
+The first resolves every file the two manifests and service workers
+reference. The second loads both extensions in a real Chrome and checks each
+one starts. Use them after pulling, and before reporting that an extension
+will not load.
 
 ### `npm test` fails
 

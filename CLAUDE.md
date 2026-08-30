@@ -30,6 +30,7 @@ Never hand-edit a `*.bundle.js` or a generated `lib/` file.
 ```bash
 npm test               # Librarian regression suite; the one fully self-contained suite
 npm run check:loadable # every file the two manifests and service workers reference
+npm run check:chrome   # loads both extensions in a real Chrome (needs Chrome + npm ci)
 ```
 
 `check:loadable` is what stops a build output going missing from a commit.
