@@ -1,4 +1,7 @@
 node_modules/
-extension/content/content.bundle.js
+# The bundle itself is committed: it is the runnable state of the content
+# script, and its build inputs are canonical in the toolkit repository.
+# The source map is not, for the same reason the original extension does
+# not ship one.
 extension/content/content.bundle.js.map
 *.DS_Store
