@@ -730,8 +730,8 @@ globalThis.AA_TOOLS = {
   },
   {
     "id": "voice-commands",
-    "name": "Voice Commands",
-    "description": "Web Speech API fallback for hands-free browsing when voice mode is not available. Voice mode (Gemini Live) provides better speech understanding including for non-standard speech. Fixes: word-boundary command matching, mic-denied loop prevention, mutual exclusion with voice mode.",
+    "name": "Hands-Free Navigation",
+    "description": "Fixed spatial voice commands for MOTOR users browsing without a keyboard or mouse — movement only (scroll/page/top/bottom/back/forward) plus \"click\" on the focused element, with visual feedback. This is NOT voice access for blind users: it can only say WHERE to move, not WHAT you want, and shows recognized text visually. For semantic voice control (\"read me the third result\") use voice mode in a host with a real microphone. (Web Speech API fallback when voice mode is unavailable.)",
     "supportAreas": [
       "motor"
     ],
@@ -785,11 +785,28 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "fix-landmarks",
+    "name": "Fix Landmarks",
+    "description": "Adds missing ARIA landmark roles (main, navigation, banner, contentinfo) to div-soup pages so screen-reader users can jump between regions instead of reading top-to-bottom. Deterministic (no AI); labels only what it can identify with confidence, never mislabels.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "dashboard",
+    "emoji": "🧭",
+    "quickStart": false,
+    "settings": {
+      "fixLandmarks": true
+    }
+  },
+  {
     "id": "read-aloud",
     "name": "Read Aloud",
-    "description": "Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. No further investment: for richer reading support use your OS/browser built-in read-aloud tools or voice mode's read-page command.",
+    "description": "Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. Intended for low-vision, dyslexic, and cognitive users — NOT screen-reader (blind) users, whose own screen reader owns the voice.",
     "supportAreas": [
-      "vision",
       "reading",
       "cognitive"
     ],
@@ -800,7 +817,9 @@ globalThis.AA_TOOLS = {
     "icon": "volume_up",
     "emoji": "🔊",
     "quickStart": false,
-    "settings": {}
+    "settings": {
+      "readAloud": true
+    }
   },
   {
     "id": "generate-labels",
@@ -1043,6 +1062,14 @@ globalThis.AA_TOOLS = {
   "skipLinks": {
     "type": "boolean",
     "description": "Add skip-to-content and skip-to-navigation links"
+  },
+  "fixLandmarks": {
+    "type": "boolean",
+    "description": "Add missing ARIA landmarks (main, navigation, banner, contentinfo) so screen-reader users can navigate by region"
+  },
+  "readAloud": {
+    "type": "boolean",
+    "description": "Read the page text aloud with text-to-speech"
   },
   "mathAccessible": {
     "type": "boolean",
