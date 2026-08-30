@@ -28,8 +28,14 @@ the toolkit repo's tree, so rebuilds happen there and land here as commits.
 Never hand-edit a `*.bundle.js` or a generated `lib/` file.
 
 ```bash
-npm test   # Librarian regression suite; the one fully self-contained suite
+npm test               # Librarian regression suite; the one fully self-contained suite
+npm run check:loadable # every file the two manifests and service workers reference
 ```
+
+`check:loadable` is what stops a build output going missing from a commit.
+Because nothing here rebuilds the bundles, an output that is absent, or
+caught by a `.gitignore` rule, is otherwise invisible until Chrome refuses
+to load the extension.
 
 ## Known tradeoffs (context for reviewers)
 
