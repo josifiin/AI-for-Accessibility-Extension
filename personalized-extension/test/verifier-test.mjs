@@ -11,8 +11,8 @@
 // Run: node test/verifier-test.mjs
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert';
-import { parseAria } from '../../tools/validators/aria-parse.js';
-import { CountFirst } from '../../tools/validators/count-first.js';
+import { parseAria } from '@ai4a11y/tools/validators/aria-parse.js';
+import { CountFirst } from '@ai4a11y/tools/validators/count-first.js';
 
 const fixture = (name) => new URL(`./fixtures/${name}`, import.meta.url);
 

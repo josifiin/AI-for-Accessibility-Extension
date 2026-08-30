@@ -2,4 +2,4 @@
 // host (extension, server, XR, mobile) shares one settings vocabulary.
 // Canonical source: toolkit/registry/tools.js. Same pattern as the
 // tools/-adapter shims (fadcd34).
-export * from '../../toolkit/registry/tools.js';
+export * from '@ai4a11y/toolkit/registry';

@@ -10,8 +10,6 @@ const path = require('path');
 
 const srcDir = __dirname;
 const outDir = path.join(srcDir, '..');
-const toolsDir = path.join(srcDir, '..', '..', 'tools');
-const cliDir = path.join(srcDir, '..', '..', 'cli');
 
 async function build() {
   try {
@@ -27,19 +25,6 @@ async function build() {
     });
 
     console.log('✓ Built content.bundle.js');
-
-    // Bundle CLI tools (for Playwright injection)
-    await esbuild.build({
-      entryPoints: [path.join(cliDir, 'cli-tools.js')],
-      bundle: true,
-      outfile: path.join(cliDir, 'cli-tools.bundle.js'),
-      format: 'iife',
-      target: ['chrome90'],
-      minify: process.env.NODE_ENV === 'production',
-      sourcemap: process.env.NODE_ENV !== 'production'
-    });
-
-    console.log('✓ Built cli-tools.bundle.js');
 
     // Bundle popup script (if exists)
     const popupEntry = path.join(srcDir, 'popup', 'popup.js');
@@ -68,7 +53,9 @@ if (process.argv.includes('--watch')) {
   console.log('Watching for changes...\n');
 
   const chokidar = require('chokidar');
-  chokidar.watch([srcDir, toolsDir, cliDir], {
+  // The tools catalog is a vendored package now (see scripts/update-vendor.mjs),
+  // so watch mode covers only this extension's own source.
+  chokidar.watch([srcDir], {
     ignored: /node_modules/,
     ignoreInitial: true
   }).on('all', (event, filepath) => {

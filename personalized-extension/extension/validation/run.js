@@ -15,7 +15,7 @@
 // what makes a stop a stop rather than narration — the corpus is explicit that
 // noticing a problem and continuing anyway is worse than not noticing.
 
-import { read } from '../../../tools/validators/reader.js';
+import { read } from '@ai4a11y/tools/validators/reader.js';
 import { checkPage } from './checks.js';
 import { decide, highest } from './policy.js';
 import { render } from './render.js';

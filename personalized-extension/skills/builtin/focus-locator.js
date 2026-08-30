@@ -2,4 +2,4 @@
 // identical to tools/adapters/focus-locator.js except for its utils import depth,
 // which the pext build's pext-utils-redirect plugin resolves to this
 // extension's provider utils. Edit the canonical file, not this one.
-export * from '../../../tools/adapters/focus-locator.js';
+export * from '@ai4a11y/tools/adapters/focus-locator.js';
