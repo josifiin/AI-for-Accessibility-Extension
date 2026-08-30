@@ -10,6 +10,8 @@
     "watch": "node build.js --watch"
   },
   "devDependencies": {
+    "@ai4a11y/toolkit": "file:../vendor/ai4a11y-toolkit.tgz",
+    "@ai4a11y/tools": "file:../vendor/ai4a11y-tools.tgz",
     "aria-query": "^5.3.2",
     "chokidar": "^3.6.0",
     "esbuild": "^0.28.0",
