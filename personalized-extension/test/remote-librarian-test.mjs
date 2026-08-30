@@ -125,6 +125,10 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
     AA_REMOTE_DEFAULTS: defaults,
   };
   vm.createContext(sandbox);
+  // The seeder consults RemoteLibrarian.isAllowedServerUrl before writing, so
+  // give the sandbox the real client, same as the service worker's importScripts.
+  vm.runInContext(fs.readFileSync(path.join(EXT_DIR, 'remote-librarian.js'), 'utf8'),
+    sandbox, { filename: 'remote-librarian.js' });
   vm.runInContext(bgSrc.slice(start, end) + '\nglobalThis.__seed = seedRemoteDefaults;', sandbox,
     { filename: 'background.js#seedRemoteDefaults' });
   return { run: sandbox.__seed, sync, local };
@@ -280,6 +284,13 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
   check('seed: fresh profile gets the build-time server config',
     fresh.sync.toolkitServerUrl === DEFAULTS.url && fresh.sync.toolkitServerToken === DEFAULTS.token);
   check('seed: fresh profile is marked seeded', fresh.local.toolkitRemoteSeeded === true);
+
+  // A build config pointing at a plain-http, non-loopback server must not be
+  // written: the bearer token would travel in cleartext to that address.
+  const insecure = loadSeeder({ defaults: { url: 'http://evil.example', token: 'aat_evil' } });
+  await insecure.run();
+  check('seed: a non-https, non-loopback default is refused, not written',
+    !('toolkitServerUrl' in insecure.sync) && !('toolkitServerToken' in insecure.sync));
 
   const configured = loadSeeder({
     defaults: DEFAULTS,

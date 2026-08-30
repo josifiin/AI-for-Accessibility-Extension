@@ -124,6 +124,10 @@ chrome.storage.onChanged?.addListener((changes, area) => {
 async function seedRemoteDefaults() {
   const d = globalThis.AA_REMOTE_DEFAULTS || {};
   if (!d.url || !d.token) return;
+  if (!globalThis.RemoteLibrarian?.isAllowedServerUrl?.(d.url)) {
+    console.warn('[AgenticA11y] refusing to seed remote server URL (https required except on localhost):', d.url);
+    return;
+  }
   try {
     const { toolkitRemoteSeeded } = await chrome.storage.local.get('toolkitRemoteSeeded');
     if (toolkitRemoteSeeded) return;
