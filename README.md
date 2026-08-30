@@ -86,12 +86,16 @@ provider pricing.*
   magnifiers, or any other assistive technology you rely on. For a broader
   (non-comprehensive) starting point on assistive tools and accessible-use
   guidance, see the [W3C Web Accessibility Initiative](https://www.w3.org/WAI/).
-- **Where your data lives.** Your profile stays on your device by default.
-  Sending it to a server (remote mode) is something you set up yourself in
-  the options page, and sharing with another app happens only through a
-  grant you approve and can revoke; revoking stops all further reads. Free
-  text you wrote and the system's confidence scores are never shared through
-  grants. Details in [SECURITY.md](SECURITY.md).
+- **Where your data lives.** What the system has learned about you (the
+  memory) stays on this device. Your ability profile, settings, and API keys
+  live in Chrome sync storage, so they follow you to other Chrome browsers
+  signed into the same Google account. Sending data to a server (remote
+  mode) is off unless you configure it in the options page or install a
+  build distributed with a server already set; a plain install from this
+  repository cannot arrive preconfigured. Sharing with another app happens
+  only through a grant you approve and can revoke; revoking stops all
+  further reads. Free text you wrote and the system's confidence scores are
+  never shared through grants. Details in [SECURITY.md](SECURITY.md).
 
 ## What is in this repository
 
