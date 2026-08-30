@@ -1,5 +1,0 @@
-server/node_modules
-server/data
-server/test
-server/*.log
-**/.DS_Store
