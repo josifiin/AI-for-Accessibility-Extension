@@ -46,10 +46,11 @@ available here through a one-line re-export in
 metadata (`supportAreas`, `settings`, a one-line `description`, and
 `quickStart: true` to show it in fast onboarding).
 
-Note: the re-export files and the full builds resolve paths into the toolkit
-repo's tree, so **rebuilding the bundles currently happens there**, where
-both trees exist side by side. If your change needs a rebuild, say so in the
-PR; see "Builds and tests" in the README.
+Note: the re-export files and the full builds resolve the toolkit code from
+the vendored `@ai4a11y/toolkit` and `@ai4a11y/tools` packages, so the
+bundles rebuild here: `npm ci` in both roots, then `npm run build`. Commit
+the rebuilt outputs with your change; CI fails on stale bundles. See
+"Builds and tests" in the README.
 
 ## Testing
 

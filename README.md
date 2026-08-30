@@ -101,16 +101,25 @@ provider pricing.*
 
 ## Builds and tests
 
-The committed bundles are the runnable state of both extensions. Their build
-inputs (`tools/`, `toolkit/`) are canonical in the toolkit repository, so
-**rebuilding currently happens there**, and refreshed bundles land here as
-commits. Making this repository buildable on its own means consuming the
-toolkit core as a proper dependency; that is an open piece of the split.
+The committed bundles are the runnable state of both extensions, and this
+repository rebuilds them itself. The toolkit code they are built from is
+consumed as two packages, `@ai4a11y/toolkit` and `@ai4a11y/tools`, vendored
+as packed tarballs under `vendor/` and pinned to one toolkit commit by
+`vendor/PIN.json`. The source stays canonical in the toolkit repository; a
+toolkit upgrade here is a deliberate pin bump
+(`node scripts/update-vendor.mjs --commit <sha>`), and CI verifies both that
+the tarballs match the pinned commit and that the committed bundles match a
+fresh rebuild.
+
+```bash
+npm ci && (cd personalized-extension && npm ci)
+npm run build    # both extensions, from a fresh clone, no sibling checkout
+```
 
 `npm test` runs the Librarian regression suite (86 checks, no install
-needed), which is the part of the personalized extension that is fully
-self-contained. The remaining suites import toolkit source and run in the
-toolkit repo.
+needed), which is fully self-contained. `personalized-extension/test/`
+holds the rest; `verifier-test.mjs` runs here too now that its imports
+resolve from the vendored packages.
 
 ## Contributing
 
