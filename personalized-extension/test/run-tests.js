@@ -447,20 +447,32 @@ server.listen(PORT, async () => {
   //         the extension/ surface ships (show-captions, fix-landmarks).
   //         An entry with no builtin of the same name under skills/builtin/
   //         belongs to that other surface, and content.js is the wrong file
-  //         to look in. The probe is by file so this turns itself back on if
-  //         the personalized extension ever ships one of them.
+  //         to look in. The exempt set is written down in OTHER_SURFACE and
+  //         the file probe has to agree with it in both directions, so a
+  //         renamed builtin or a new toolkit entry is a FAIL here rather than
+  //         a silent exemption.
   //       - Entries with no settings keys at all, plus the ones listed in
   //         IMPERATIVE_ONLY. read-aloud is started by the popup's Read button
   //         (a speakPage message content.js answers by calling ReadAloud), so
   //         there is no stored toggle to read at page load even though the
   //         registry declares a readAloud setting for other surfaces.
   const IMPERATIVE_ONLY = new Set(['read-aloud']);
+  const OTHER_SURFACE = new Set(['show-captions', 'fix-landmarks']);
   {
     const entries = extractRegistryEntries(registryContent);
     for (const entry of entries) {
       const keys = entry.settingsKeys;
-      if (!fs.existsSync(path.join(ROOT, 'skills/builtin', `${entry.id}.js`))) {
+      const hasBuiltin = fs.existsSync(path.join(ROOT, 'skills/builtin', `${entry.id}.js`));
+      if (!hasBuiltin && OTHER_SURFACE.has(entry.id)) {
         console.log(`PASS: ${entry.id} is another surface's adapter, not this extension's (exempt)`);
+        continue;
+      }
+      if (!hasBuiltin) {
+        console.log(`FAIL: ${entry.id} has no skills/builtin/${entry.id}.js and is not in OTHER_SURFACE; add the builtin or list it`);
+        continue;
+      }
+      if (OTHER_SURFACE.has(entry.id)) {
+        console.log(`FAIL: ${entry.id} is listed in OTHER_SURFACE but skills/builtin/${entry.id}.js exists; remove it from the list`);
         continue;
       }
       if (keys.length === 0 || IMPERATIVE_ONLY.has(entry.id)) {
