@@ -414,6 +414,8 @@ async function main() {
   } finally {
     await browser.close();
     server.close();
+    // The throwaway profile is only useful while the browser is open.
+    fs.rmSync(userDataDir, { recursive: true, force: true });
   }
 
   // ---------------------------------------------------------------------------
