@@ -6,7 +6,8 @@
   <style>
     /* Fixed baselines so the journey can assert exact numbers. The Low Vision
        profile scales font size by 1.5 and sets letter spacing to 0.12em, so
-       16px becomes 24px and "normal" becomes 1.92px. */
+       16px becomes 24px and "normal" becomes 2.88px: the em resolves against
+       the paragraph's own scaled 24px, not the 16px baseline. */
     body { margin: 2rem; background: #ffffff; color: #111111; }
     h1 { font-size: 32px; }
     p { font-size: 16px; line-height: 1.5; letter-spacing: normal; }

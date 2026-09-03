@@ -20,7 +20,7 @@
 //
 // Chrome comes from CHROME_PATH or the usual install locations, and the
 // extension is loaded over the DevTools Protocol rather than with
-// --load-extension, which Chrome no longer honours. This is the same approach
+// --load-extension, which Chrome no longer honors. This is the same approach
 // scripts/check-extensions-load-in-chrome.mjs takes.
 //
 //   CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
@@ -66,6 +66,21 @@ function check(name, ok, detail) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Poll sync storage until `ready` holds, or give up and hand back the last
+// value read so the check that follows prints what it actually saw. The popup
+// writes storage asynchronously after a click returns, so a read at a fixed
+// delay races those writes.
+async function waitForStorage(readStorage, keys, ready, timeoutMs = 15000) {
+  const deadline = Date.now() + timeoutMs;
+  let last;
+  do {
+    last = await readStorage(keys);
+    if (ready(last)) return last;
+    await sleep(100);
+  } while (Date.now() < deadline);
+  return last;
+}
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript' };
 
@@ -229,25 +244,30 @@ async function main() {
 
     // The content script runs at document_idle and answers messages once it is
     // listening. Waiting for that answer is what makes the rest deterministic.
-    const contentScriptReady = await popup.evaluate(
-      () =>
-        new Promise((resolve) => {
-          const deadline = Date.now() + 20000;
-          const attempt = () => {
-            chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-              if (!tab || tab.url.startsWith('chrome-extension://')) {
-                return Date.now() < deadline ? setTimeout(attempt, 250) : resolve(false);
-              }
-              chrome.tabs.sendMessage(tab.id, { type: 'getToolStates' }, (resp) => {
-                void chrome.runtime.lastError;
-                if (resp?.states) return resolve(true);
-                return Date.now() < deadline ? setTimeout(attempt, 250) : resolve(false);
+    // A tab whose URL the extension cannot see (no host access, or a page still
+    // navigating) is retried rather than dereferenced, so a slow start ends in
+    // a FAIL line instead of a promise that never settles.
+    const waitForContentScript = () =>
+      popup.evaluate(
+        () =>
+          new Promise((resolve) => {
+            const deadline = Date.now() + 20000;
+            const attempt = () => {
+              chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+                if (!tab || !tab.url || tab.url.startsWith('chrome-extension://')) {
+                  return Date.now() < deadline ? setTimeout(attempt, 250) : resolve(false);
+                }
+                chrome.tabs.sendMessage(tab.id, { type: 'getToolStates' }, (resp) => {
+                  void chrome.runtime.lastError;
+                  if (resp?.states) return resolve(true);
+                  return Date.now() < deadline ? setTimeout(attempt, 250) : resolve(false);
+                });
               });
-            });
-          };
-          attempt();
-        })
-    );
+            };
+            attempt();
+          })
+      );
+    const contentScriptReady = await waitForContentScript();
     check('content script is listening on the fixture page', contentScriptReady === true);
 
     const baseline = await readPage(fixture);
@@ -264,9 +284,11 @@ async function main() {
 
     // ---- Step 3: switch the access need on --------------------------------
     await tickNeed(popup);
-    await sleep(500);
-
-    const activated = await readStorage(['selectedProfiles', 'fontScale', 'letterSpacing', 'lineHeight']);
+    const activated = await waitForStorage(
+      readStorage,
+      ['selectedProfiles', 'fontScale', 'letterSpacing', 'lineHeight'],
+      (s) => Array.isArray(s.selectedProfiles) && s.selectedProfiles.includes(NEED_ID) && typeof s.fontScale === 'number' && s.fontScale > 100
+    );
     check(
       `switching on ${NEED_ID} records it in sync storage`,
       Array.isArray(activated.selectedProfiles) &&
@@ -348,9 +370,11 @@ async function main() {
 
     // ---- Step 5: withdraw the access need ---------------------------------
     await tickNeed(popup);
-    await sleep(500);
-
-    const withdrawn = await readStorage(['selectedProfiles', 'fontScale', 'letterSpacing']);
+    const withdrawn = await waitForStorage(
+      readStorage,
+      ['selectedProfiles', 'fontScale', 'letterSpacing'],
+      (s) => Array.isArray(s.selectedProfiles) && s.selectedProfiles.length === 0 && !(s.fontScale > 100)
+    );
     check(
       'unticking the access need empties selectedProfiles',
       Array.isArray(withdrawn.selectedProfiles) && withdrawn.selectedProfiles.length === 0,
@@ -383,7 +407,11 @@ async function main() {
     // withdrawal, so this is asserted separately from step 5. The person's
     // saved profile is a different thing from the adaptation, and withdrawing
     // one access need must not throw it away.
+    // This is a negative check (nothing should change), so there is no style
+    // to wait for. Wait for the content script to be listening again, then
+    // give it the same settling time a person would before reading the page.
     await fixture.reload({ waitUntil: 'load' });
+    check('content script is listening again after the final reload', (await waitForContentScript()) === true);
     await sleep(3000);
     const afterFinalReload = await readPage(fixture);
     check(
