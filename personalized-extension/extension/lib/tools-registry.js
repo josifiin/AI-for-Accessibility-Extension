@@ -747,9 +747,29 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "show-captions",
+    "name": "Show Captions",
+    "description": "Turns ON captions the media already has — switches the right <video> text track to showing (preferring your language), or clicks the player’s CC button (YouTube, Vimeo). No AI, no latency: the common case where captions exist and just need enabling. Re-applies as new videos load (SPA nav, autoplay playlists) and never re-enables captions you turned off.",
+    "supportAreas": [
+      "hearing"
+    ],
+    "siteRelevance": [
+      "video",
+      "social",
+      "education"
+    ],
+    "requiresAI": false,
+    "icon": "closed_caption",
+    "emoji": "📝",
+    "quickStart": true,
+    "settings": {
+      "showCaptions": true
+    }
+  },
+  {
     "id": "captions",
-    "name": "Captions",
-    "description": "Auto-enables native CC on YouTube pages and iframes. For reachable http(s) media, transcribes audio in ~15s chunks via cloud AI and attaches an AI-generated caption track or expandable transcript (requires Gemini API key). blob:/DRM/MSE media shows a notice to try Chrome Live Caption instead. Not live captioning.",
+    "name": "Generate Captions",
+    "description": "For media with NO caption track: transcribes reachable http(s) audio in ~15s chunks via cloud AI and attaches an AI-generated caption track or expandable transcript (requires Gemini API key). blob:/DRM/MSE media shows a notice to try Chrome Live Caption instead. Not live captioning. For media that already has captions, use Show Captions instead (no AI).",
     "supportAreas": [
       "hearing"
     ],
@@ -1130,9 +1150,17 @@ globalThis.AA_TOOLS = {
     "type": "boolean",
     "description": "AI-generated form labels"
   },
+  "showCaptions": {
+    "type": "boolean",
+    "description": "Turn on captions the media already has (no AI)"
+  },
+  "liveCaptions": {
+    "type": "boolean",
+    "description": "Browser-generated captions for any audio (Chrome Live Caption)"
+  },
   "autoCaptions": {
     "type": "boolean",
-    "description": "Auto captions on video"
+    "description": "Generate captions for media that has none (AI)"
   },
   "autoSimplify": {
     "type": "boolean",
