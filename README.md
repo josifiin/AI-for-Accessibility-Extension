@@ -27,13 +27,16 @@ This repository was split out of the toolkit repository with its **full
 history preserved**, so every past version of every file is still here.
 Paths that used to sit beside the extensions now live in the toolkit repo:
 `toolkit/` (the core), `tools/` (auditors, adapters, profiles), `server/`
-(the hosted service), `cli/`, `examples/`, and the core design docs. The
-extensions still run from here unchanged; see "Builds and tests" for how the
-two repos currently relate.
+(the hosted service), `cli/`, `examples/`, and the core design docs.
+`projects/` (team project code) and `webapp/` stayed here; the web apps are
+candidates to return to their originating teams. The extensions still run
+from here unchanged; see "Builds and tests" for how the two repos currently
+relate.
 
 ## Who this is for
 
-- **People who want to try the extension** — start with "Install" below. No
+- **People who want a page adapted to their needs**, including people with
+  disabilities anywhere in the world — start with "Install" below. No
   programming needed.
 - **Developers contributing to the extensions** — extension code, the
   builders, and the web apps live here. New auditors, adapters, and profiles
@@ -83,6 +86,16 @@ provider pricing.*
   magnifiers, or any other assistive technology you rely on. For a broader
   (non-comprehensive) starting point on assistive tools and accessible-use
   guidance, see the [W3C Web Accessibility Initiative](https://www.w3.org/WAI/).
+- **Where your data lives.** What the system has learned about you (the
+  memory) stays on this device. Your ability profile, settings, and API keys
+  live in Chrome sync storage, so they follow you to other Chrome browsers
+  signed into the same Google account. Sending data to a server (remote
+  mode) is off unless you configure it in the options page or install a
+  build distributed with a server already set; a plain install from this
+  repository cannot arrive preconfigured. Sharing with another app happens
+  only through a grant you approve and can revoke; revoking stops all
+  further reads. Free text you wrote and the system's confidence scores are
+  never shared through grants. Details in [SECURITY.md](SECURITY.md).
 
 ## What is in this repository
 

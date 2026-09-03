@@ -36,15 +36,16 @@ No build step is needed to run what is here: the bundles are committed.
 
 ## The registry and settings vocabulary
 
-The personalized extension's skill registry lives here:
-[`personalized-extension/skills/registry.js`](personalized-extension/skills/registry.js).
-`settingsMeta` in that file is the full settings vocabulary — every key, its
-type, and its valid range — and it is what `validateSkill` checks recipes
-against. When an adapter lands in the toolkit repo's catalog, it becomes
-available here through a one-line re-export in
-`personalized-extension/skills/builtin/` plus a registry entry with its
-metadata (`supportAreas`, `settings`, a one-line `description`, and
-`quickStart: true` to show it in fast onboarding).
+The canonical registry moved into the toolkit:
+[`personalized-extension/skills/registry.js`](personalized-extension/skills/registry.js)
+is now a one-line re-export of `@ai4a11y/toolkit/registry`, whose
+`settingsMeta` is the full settings vocabulary — every key, its type, and
+its valid range — and is what `validateSkill` checks recipes against. When
+an adapter lands in the toolkit repo's catalog, it becomes available here
+through a one-line re-export in `personalized-extension/skills/builtin/`;
+its registry entry (`supportAreas`, `settings`, a one-line `description`,
+`quickStart: true` for fast onboarding) is made in the toolkit repo's
+`toolkit/registry/tools.js`.
 
 Note: the re-export files and the full builds resolve the toolkit code from
 the vendored `@ai4a11y/toolkit` and `@ai4a11y/tools` packages, so the
@@ -58,8 +59,9 @@ the rebuilt outputs with your change; CI fails on stale bundles. See
 npm test   # Librarian regression suite (86 checks, no install needed)
 ```
 
-The remaining suites import toolkit source and run in the toolkit repo. Two
-browser tests need a local Chromium and are skipped in CI —
+`personalized-extension/test/verifier-test.mjs` also runs here, now that
+its imports resolve from the vendored packages; CI runs it. Two browser
+tests need a local Chromium and are skipped in CI —
 `personalized-extension/test/skills-page-test.js` and `demo-beats-e2e.js`.
 Run them locally if you touched the Skill Builder page or the demo.
 
@@ -77,13 +79,14 @@ more than one kind of page (an article, a form, a data table).
 - Describe who benefits (which disability/profile)
 - The committed bundles are the runnable state. Do not hand-edit a
   `*.bundle.js` or a generated `personalized-extension/extension/lib/` file;
-  if your change requires regenerating them, note it in the PR
+  if your change affects them, rebuild (`npm run build`) and commit the
+  outputs, or CI fails on the drift
 
 ## Code Style
 
 - ES modules, bundled by esbuild
-- Use the AI provider abstraction for AI features (canonical in the toolkit
-  repo's `tools/utils/ai.js`)
+- Use the AI provider abstraction for AI features (`utils/ai.js` in the
+  `@ai4a11y/tools` package; canonical source in the toolkit repo)
 - Document which profiles/disabilities the feature helps
 - No large binaries — use Git LFS or link externally
 
