@@ -65,6 +65,7 @@ import {
   SpaFocus,
   SkipLinks,
   MathA11y,
+  ShowCaptions,
 } from '@ai4a11y/tools/adapters/index.js';
 
 // Extension-specific imports
@@ -200,6 +201,10 @@ function applyVisualSettings(settings) {
     AutoTranscriber.enable();
     console.log('[AI4A11y] Auto transcriber enabled');
   }
+  // Switch on the captions media already carries. The Deaf/HoH preset sets
+  // this key, and it needs no model or key, so it is the tier that works
+  // before anything AI-backed does.
+  if (settings.showCaptions) ShowCaptions.enable();
 }
 
 // Initialize on page load
@@ -422,6 +427,7 @@ function revertAll() {
   VoiceCommands.disable();
   KeyboardNavigator.disable();
   AutoTranscriber.disable();
+  ShowCaptions.disable();
   DismissOverlays.disable();
   BigTargets.disable();
   LinkHighlighter.disable();
@@ -628,6 +634,7 @@ function handleEnableTool(tool, options = {}) {
     case 'keyboardNav': case 'KeyboardNavigator': KeyboardNavigator.enable(options); break;
     case 'voiceCommands': case 'VoiceCommands': VoiceCommands.enable(options); break;
     case 'autoCaptions': case 'AutoTranscriber': AutoTranscriber.enable(); break;
+    case 'showCaptions': case 'ShowCaptions': ShowCaptions.enable(); break;
     default: console.log('[AI4A11y] Unknown tool:', tool);
   }
 }
@@ -647,6 +654,7 @@ function handleDisableTool(tool) {
     case 'keyboardNav': case 'KeyboardNavigator': KeyboardNavigator.disable(); break;
     case 'voiceCommands': case 'VoiceCommands': VoiceCommands.disable(); break;
     case 'autoCaptions': case 'AutoTranscriber': AutoTranscriber.disable(); break;
+    case 'showCaptions': case 'ShowCaptions': ShowCaptions.disable(); break;
   }
 }
 
