@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { toolkitFile } = require('./toolkit-paths.js');
 
 // Track failures across the scattered `console.log('FAIL: ...')` call sites
 // so this suite can gate CI (it exits 0 unconditionally otherwise).
@@ -111,7 +112,7 @@ server.listen(PORT, async () => {
   // Retired: large-cursor, dyslexia-font (entries removed; settingsMeta keys kept).
   // Canonical registry moved into the toolkit (skills/registry.js is a
   // re-export shim) — static source checks read the canonical file.
-  const registryPath = path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js');
+  const registryPath = toolkitFile('registry', 'tools.js');
   const registryContent = fs.readFileSync(registryPath, 'utf8');
   for (const skill of expectedSkills) {
     if (registryContent.includes(`id: '${skill}'`)) {
@@ -328,7 +329,7 @@ server.listen(PORT, async () => {
   } else {
     console.log('FAIL: undo journal must be SW-owned and use removeScopedSetting');
   }
-  const librarianSrc = fs.readFileSync(path.join(ROOT, '..', 'toolkit/core/librarian.js'), 'utf8');
+  const librarianSrc = fs.readFileSync(toolkitFile('core', 'librarian.js'), 'utf8');
   if (librarianSrc.includes('removeScopedSetting') && librarianSrc.includes('hasScopedSetting')) {
     console.log('PASS: Librarian exposes the scoped-setting delete primitive');
   } else {
@@ -1042,7 +1043,7 @@ server.listen(PORT, async () => {
     // (d) wcagRiskyFixes key in registry settingsMeta
     // Canonical registry moved into the toolkit (skills/registry.js is a
   // re-export shim) — static source checks read the canonical file.
-  const registryPath = path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js');
+  const registryPath = toolkitFile('registry', 'tools.js');
     const registryCode = fs.readFileSync(registryPath, 'utf8');
     if (registryCode.includes('wcagRiskyFixes')) {
       console.log('PASS: registry.js contains wcagRiskyFixes setting key');
@@ -1217,7 +1218,7 @@ server.listen(PORT, async () => {
     }
 
     // (d) quickStart: false in registry for voice-commands
-    const registryCode = fs.readFileSync(path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js'), 'utf8');
+    const registryCode = fs.readFileSync(toolkitFile('registry', 'tools.js'), 'utf8');
     // Find the voice-commands entry and check quickStart
     const vcEntryMatch = registryCode.match(/id:\s*'voice-commands'[\s\S]*?(?=\},\s*\{|\}\s*\])/);
     if (vcEntryMatch && /quickStart:\s*false/.test(vcEntryMatch[0])) {

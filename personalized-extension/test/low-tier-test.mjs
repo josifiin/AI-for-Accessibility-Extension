@@ -11,11 +11,13 @@
  */
 
 import { readFileSync } from 'fs';
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
+const { toolkitFile } = createRequire(import.meta.url)('./toolkit-paths.js');
 
 let passed = 0;
 let failed = 0;
@@ -169,7 +171,7 @@ function fail(msg) { console.log('FAIL:', msg); failed++; }
   }
 
   // (e) quickStart verified false in registry.
-  const regSrc = readFileSync(join(ROOT, '..', 'toolkit', 'registry', 'tools.js'), 'utf8');
+  const regSrc = readFileSync(toolkitFile('registry', 'tools.js'), 'utf8');
   // Find the read-aloud entry and check quickStart.
   const raMatch = regSrc.match(/id:\s*'read-aloud'[\s\S]*?quickStart:\s*(true|false)/);
   if (raMatch && raMatch[1] === 'false') {
@@ -300,7 +302,7 @@ function fail(msg) { console.log('FAIL:', msg); failed++; }
 // 5. Registry retirement checks
 // ---------------------------------------------------------------------------
 {
-  const regSrc = readFileSync(join(ROOT, '..', 'toolkit', 'registry', 'tools.js'), 'utf8');
+  const regSrc = readFileSync(toolkitFile('registry', 'tools.js'), 'utf8');
 
   // large-cursor and dyslexia-font entries removed from list.
   if (!regSrc.includes("id: 'large-cursor'")) {
