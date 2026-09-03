@@ -61,10 +61,18 @@ function integrityOf(file) {
 function refreshLockIntegrity(lockPath, hashes) {
   const before = readFileSync(lockPath, 'utf8');
   const lock = JSON.parse(before);
+  const seen = new Set();
   for (const entry of Object.values(lock.packages ?? {})) {
     const match = /^file:(?:\.\.\/)*vendor\/(.+)$/.exec(entry?.resolved ?? '');
     if (!match || !Object.hasOwn(hashes, match[1])) continue;
     entry.integrity = hashes[match[1]];
+    seen.add(match[1]);
+  }
+  // A tarball with no matching entry would leave a stale hash behind and the
+  // script would still report success, so that is an error, not a skip.
+  const missing = Object.keys(hashes).filter((name) => !seen.has(name));
+  if (missing.length) {
+    throw new Error(`${lockPath} has no packages entry resolving to vendor/${missing.join(', vendor/')}; regenerate the lockfile with npm install first`);
   }
   const after = `${JSON.stringify(lock, null, 2)}\n`;
   if (after !== before) writeFileSync(lockPath, after);
