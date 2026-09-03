@@ -271,6 +271,9 @@
   }
 
   // extension/src/popup/popup.js
+  var PROFILE_SETTING_KEYS = [...new Set(
+    Object.values(profiles).flatMap((p) => Object.keys(p.tools || {}))
+  )];
   function setChecked(id, value) {
     const el = document.getElementById(id);
     if (el) el.checked = value;
@@ -638,6 +641,10 @@
       storageReset.fontScale = 100;
       storageReset.lineHeight = 1.5;
       storageReset.letterSpacing = 0;
+      for (const key of PROFILE_SETTING_KEYS) {
+        if (key in storageReset) continue;
+        storageReset[key] = defaults[key] !== void 0 ? defaults[key] : false;
+      }
       if (!preserveProfile) {
         storageReset.selectedProfiles = [];
       }
