@@ -29,7 +29,7 @@ function arg(name) {
   return i === -1 ? undefined : args[i + 1];
 }
 const commit = arg('--commit');
-const repo = arg('--repo') ?? 'https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft';
+const repo = arg('--repo') ?? 'https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit';
 if (!commit || !/^[0-9a-f]{7,40}$/.test(commit)) {
   console.error('usage: node scripts/update-vendor.mjs --commit <sha> [--repo <url-or-local-path>]');
   process.exit(1);
