@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   test:
@@ -22,12 +21,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      # What this repo can test today. The extension bundles and the
-      # personalized extension's toolkit-derived lib/ files are committed and
-      # currently rebuilt in the toolkit repository, where the code they are
-      # built from is canonical; the remaining personalized-extension tests
-      # (test/run-tests.js) also import that code and run there. See the
-      # README's "Builds and tests" section.
+      # Fully self-contained: installs nothing, needs no browser. A property
+      # worth preserving: a contributor can clone and run it.
       - name: Librarian regression tests
         run: npm test
 
@@ -40,10 +35,68 @@ jobs:
       - name: Both extensions load from a fresh checkout
         run: npm run check:loadable
 
-  # Kept separate from `test` on purpose. That job installs nothing and needs
-  # no browser, which is a property worth preserving: a contributor can clone
-  # and run it. This one needs Chrome and one dependency, so a failure here
-  # points at the extensions rather than at the toolchain.
+  # This repository rebuilds its own bundles from the vendored @ai4a11y
+  # packages (vendor/, pinned by vendor/PIN.json). A stale committed bundle
+  # or generated lib/ file fails here.
+  build:
+    name: Bundles are fresh
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install both roots
+        run: |
+          npm ci
+          cd personalized-extension && npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+
+      - name: Rebuild everything
+        run: npm run build
+
+      - name: Committed outputs match the rebuild
+        run: git diff --exit-code
+
+      - name: Verifier tests
+        run: node personalized-extension/test/verifier-test.mjs
+
+  # The vendored tarballs must be exactly what `npm pack` produces at the
+  # commit vendor/PIN.json records. Compares extracted trees, not tarball
+  # bytes, so gzip and npm-version differences cannot cause false failures.
+  vendor:
+    name: Vendored tarballs match the pin
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Re-pack from the pinned commit and diff
+        run: |
+          REPO=$(node -p "require('./vendor/PIN.json').repo")
+          COMMIT=$(node -p "require('./vendor/PIN.json').commit")
+          git clone --quiet --no-checkout "$REPO" /tmp/toolkit-src
+          git -C /tmp/toolkit-src checkout --quiet "$COMMIT"
+          mkdir -p /tmp/packed /tmp/fresh /tmp/committed
+          (cd /tmp/toolkit-src/toolkit && npm pack --pack-destination /tmp/packed --silent)
+          (cd /tmp/toolkit-src/tools && npm pack --pack-destination /tmp/packed --silent)
+          for t in /tmp/packed/*.tgz; do mkdir -p "/tmp/fresh/$(basename "$t" .tgz)" && tar -xzf "$t" -C "/tmp/fresh/$(basename "$t" .tgz)"; done
+          tar -xzf vendor/ai4a11y-toolkit.tgz -C /tmp/committed --one-top-level=toolkit
+          tar -xzf vendor/ai4a11y-tools.tgz -C /tmp/committed --one-top-level=tools
+          diff -r /tmp/fresh/*toolkit*/package /tmp/committed/toolkit/package
+          diff -r /tmp/fresh/*tools*/package /tmp/committed/tools/package
+
+  # Kept separate from `test` on purpose: this one needs Chrome and one
+  # dependency, so a failure here points at the extensions rather than at
+  # the toolchain.
   chrome:
     name: Both extensions load in Chrome
     runs-on: ubuntu-latest

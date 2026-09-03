@@ -2,4 +2,4 @@
 // identical to tools/adapters/magnifier.js except for its utils import depth,
 // which the pext build's pext-utils-redirect plugin resolves to this
 // extension's provider utils. Edit the canonical file, not this one.
-export * from '../../../tools/adapters/magnifier.js';
+export * from '@ai4a11y/tools/adapters/magnifier.js';

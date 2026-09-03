@@ -7,7 +7,7 @@
  * so the popup, content script, and CLI all read the same data.
  */
 
-import { mergeProfileTools } from '../../../tools/profiles/settings.js';
+import { mergeProfileTools } from '@ai4a11y/tools/profiles/settings.js';
 
 // Safe element setters
 function setChecked(id, value) {

@@ -1,5 +1,5 @@
 (() => {
-  // tools/profiles/settings.json
+  // node_modules/@ai4a11y/tools/profiles/settings.json
   var settings_default = {
     $comment: "Single source of truth for ability profiles. Consumed by tools/profiles/settings.js (bundled into the extension + CLI tools) and read directly by cli/cli.py. Values are evidence-based \u2014 sources: W3C WCAG, W3C COGA, WebAIM Low Vision Survey, AASPIRE autism study, NNGroup UX research.",
     profiles: {
@@ -11,8 +11,7 @@
           autoFixLabels: true,
           autoDescribe: true,
           autoVideoDescribe: true,
-          keyboardNav: true,
-          pageOutline: true,
+          fixLandmarks: true,
           announceUpdates: true,
           describeOnDemand: true,
           languageTag: true,
@@ -246,7 +245,7 @@
     }
   };
 
-  // tools/profiles/settings.js
+  // node_modules/@ai4a11y/tools/profiles/settings.js
   var profiles = settings_default.profiles;
   var defaults = settings_default.defaults;
   var settings = { ...defaults };

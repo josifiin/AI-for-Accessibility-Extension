@@ -6,11 +6,16 @@
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
   "scripts": {
+    "build": "node extension/src/build.js && npm --prefix personalized-extension run build",
+    "vendor:update": "node scripts/update-vendor.mjs",
     "test": "node personalized-extension/test/librarian-test.js",
     "check:loadable": "node scripts/check-extensions-loadable.mjs",
     "check:chrome": "node scripts/check-extensions-load-in-chrome.mjs"
   },
   "devDependencies": {
+    "@ai4a11y/toolkit": "file:vendor/ai4a11y-toolkit.tgz",
+    "@ai4a11y/tools": "file:vendor/ai4a11y-tools.tgz",
+    "esbuild": "^0.28.0",
     "puppeteer-core": "^24.42.0"
   }
 }

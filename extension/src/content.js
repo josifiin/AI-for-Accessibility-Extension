@@ -9,12 +9,12 @@
  */
 
 // Import from shared tools
-import { setAIProvider } from '../../tools/utils/ai.js';
-import { profiles, loadSettings, getSettings, isEnabled, updateSettings, getProfile } from '../../tools/profiles/settings.js';
-import { clearAllMarks, sleep } from '../../tools/utils/dom.js';
-import { runAxeAnalysis, getElementFromNode } from '../../tools/auditors/wcag-issues.js';
-import { findEmptyAltImages, findCanvasElements } from '../../tools/auditors/missing-alt.js';
-import { findAmbiguousLinks } from '../../tools/auditors/missing-labels.js';
+import { setAIProvider } from '@ai4a11y/tools/utils/ai.js';
+import { profiles, loadSettings, getSettings, isEnabled, updateSettings, getProfile } from '@ai4a11y/tools/profiles/settings.js';
+import { clearAllMarks, sleep } from '@ai4a11y/tools/utils/dom.js';
+import { runAxeAnalysis, getElementFromNode } from '@ai4a11y/tools/auditors/wcag-issues.js';
+import { findEmptyAltImages, findCanvasElements } from '@ai4a11y/tools/auditors/missing-alt.js';
+import { findAmbiguousLinks } from '@ai4a11y/tools/auditors/missing-labels.js';
 import {
   getAxeHandler,
   generateImageAlt,
@@ -65,7 +65,7 @@ import {
   SpaFocus,
   SkipLinks,
   MathA11y,
-} from '../../tools/adapters/index.js';
+} from '@ai4a11y/tools/adapters/index.js';
 
 // Extension-specific imports
 import { resetStats, getStats, getFixLog, logFix, incrementStat } from './stats.js';

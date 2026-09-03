@@ -1,5 +1,5 @@
 (() => {
-  // personalized-extension/extension/browser-harness/src/harness/state.js
+  // extension/browser-harness/src/harness/state.js
   var BH_ATTACHED = /* @__PURE__ */ new Set();
   var BH_EVENTS = /* @__PURE__ */ new Map();
   var BH_PENDING_DIALOGS = /* @__PURE__ */ new Map();
@@ -63,7 +63,7 @@
     return BH_PENDING_DIALOGS.get(tabId) || null;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/constants.js
+  // extension/browser-harness/src/harness/constants.js
   var BH_INTERNAL = ["chrome://", "chrome-untrusted://", "devtools://", "chrome-extension://", "about:"];
   var BH_DEBUGGER_VERSION = "1.3";
   var BH_CDP_TIMEOUT_MS = 6e4;
@@ -123,7 +123,7 @@
   };
   var BH_KC = { Enter: 13, Tab: 9, Escape: 27, Backspace: 8, " ": 32, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
 
-  // personalized-extension/extension/browser-harness/src/harness/cdp.js
+  // extension/browser-harness/src/harness/cdp.js
   function _bhTimeout(ms, label) {
     let timer;
     const promise = new Promise((_, reject) => {
@@ -148,7 +148,7 @@
     return _bhSendCmd({ tabId }, method, params, timeoutMs);
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/lifecycle.js
+  // extension/browser-harness/src/harness/lifecycle.js
   async function bhAttach(tabId) {
     if (BH_ATTACHED.has(tabId)) return;
     await chrome.debugger.attach({ tabId }, BH_DEBUGGER_VERSION);
@@ -213,7 +213,7 @@
     chrome.debugger.onEvent._bhInstalled = true;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/dialog.js
+  // extension/browser-harness/src/harness/dialog.js
   async function bhHandleDialog(tabId, accept = true, promptText = null) {
     await bhAttach(tabId);
     const params = { accept };
@@ -221,7 +221,7 @@
     await bhCdp(tabId, "Page.handleJavaScriptDialog", params);
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/watchdog.js
+  // extension/browser-harness/src/harness/watchdog.js
   var _BhWatchdog = class {
     constructor(name) {
       this.name = name;
@@ -323,7 +323,7 @@
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/liveness.js
+  // extension/browser-harness/src/harness/liveness.js
   async function _bhPing(tabId) {
     if (!bhHealthIsEnabled()) return;
     if (bhAgentIsBusy()) return;
@@ -365,7 +365,7 @@
     chrome.alarms.onAlarm._bhInstalled = true;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/navigation.js
+  // extension/browser-harness/src/harness/navigation.js
   async function bhGotoUrl(tabId, url) {
     await bhAttach(tabId);
     return await bhCdp(tabId, "Page.navigate", { url });
@@ -394,7 +394,7 @@
     return { url: "", title: "", w: 0, h: 0, sx: 0, sy: 0, pw: 0, ph: 0 };
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/injected/page-helpers.bhinject
+  // extension/browser-harness/src/harness/injected/page-helpers.bhinject
   var page_helpers_default = `// In-page interactive-element helper. Bundled in by esbuild's text loader
 // (.bhinject suffix) and handed to Runtime.evaluate verbatim, so this file
 // runs in the *page's* JS context, not the service worker's. It must
@@ -877,7 +877,7 @@
 })()
 `;
 
-  // personalized-extension/extension/browser-harness/src/harness/interactive.js
+  // extension/browser-harness/src/harness/interactive.js
   var _BH_INTERACTIVE_SRC = page_helpers_default + ".findTarget";
   async function _bhSnapToInteractive(tabId, x, y) {
     const fallback = { x, y, snapped: false };
@@ -1212,7 +1212,7 @@
     return result;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/runtime.js
+  // extension/browser-harness/src/harness/runtime.js
   function _bhDecodeUnserializable(v) {
     if (v === "NaN") return NaN;
     if (v === "Infinity") return Infinity;
@@ -1294,7 +1294,7 @@
     return await r.text();
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/wait.js
+  // extension/browser-harness/src/harness/wait.js
   function bhWait(ms = 1e3) {
     return new Promise((r) => setTimeout(r, ms));
   }
@@ -1347,7 +1347,7 @@
     return false;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/input.js
+  // extension/browser-harness/src/harness/input.js
   async function bhClickAt(tabId, x, y, opts = {}) {
     const button = opts.button || "left";
     const clicks = opts.clicks || 1;
@@ -1457,7 +1457,7 @@
     );
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/ax-render.js
+  // extension/browser-harness/src/harness/ax-render.js
   var SKIP_ROLES = /* @__PURE__ */ new Set([
     "none",
     "presentation",
@@ -1497,7 +1497,7 @@
     return out.join("\n") + "\n";
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/ax.js
+  // extension/browser-harness/src/harness/ax.js
   var AX_TIMEOUT_MS = 8e3;
   async function bhAxTree(tabId) {
     try {
@@ -1534,7 +1534,7 @@
     return { url, text: bhRenderAx(nodes, { ...opts, url }), nodeCount: nodes.length };
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/actions/stale-recovery.js
+  // extension/browser-harness/src/harness/actions/stale-recovery.js
   async function _bhResolveStaleByIdentity(tabId, idx) {
     const lastItems = _BH_LAST_ITEMS.get(tabId);
     if (!lastItems || !Array.isArray(lastItems) || idx >= lastItems.length) return null;
@@ -1595,7 +1595,7 @@
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/actions/click.js
+  // extension/browser-harness/src/harness/actions/click.js
   async function _bhJsClickIndex(tabId, idx) {
     const expr = `
     (() => {
@@ -1867,7 +1867,7 @@
     };
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/actions/type.js
+  // extension/browser-harness/src/harness/actions/type.js
   async function bhTypeIndex(tabId, idx, text, opts = {}) {
     return await _bhWithStaleRecovery(
       tabId,
@@ -1965,7 +1965,7 @@
     };
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/actions/dropdown.js
+  // extension/browser-harness/src/harness/actions/dropdown.js
   async function bhDropdownOptions(tabId, idx, opts = {}) {
     return await _bhWithStaleRecovery(
       tabId,
@@ -2143,7 +2143,7 @@
     return v;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/actions/upload.js
+  // extension/browser-harness/src/harness/actions/upload.js
   async function bhUploadFileIndex(tabId, idx, files, opts = {}) {
     return await _bhWithStaleRecovery(
       tabId,
@@ -2208,7 +2208,7 @@
     return { indexed: idx, files: list };
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/highlights.js
+  // extension/browser-harness/src/harness/highlights.js
   async function bhDrawHighlights(base64Png, items, opts = {}) {
     if (!items || !items.length) return base64Png;
     if (typeof OffscreenCanvas === "undefined" || typeof createImageBitmap === "undefined") {
@@ -2267,7 +2267,7 @@
     return out;
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/screenshot.js
+  // extension/browser-harness/src/harness/screenshot.js
   async function bhCaptureScreenshot(tabId, { full = false, maxDim = null, cssNormalize = false, timeoutMs = null, attempts = null } = {}) {
     await bhAttach(tabId);
     const tm = timeoutMs != null ? timeoutMs : full ? 12e4 : 5e3;
@@ -2337,7 +2337,7 @@
     return { data, width: targetW, height: targetH, cssWidth, cssHeight, dpr, scale };
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/tabs.js
+  // extension/browser-harness/src/harness/tabs.js
   async function bhListTabs({ includeChrome = true } = {}) {
     const tabs = await chrome.tabs.query({});
     return tabs.filter((t) => includeChrome || !BH_INTERNAL.some((p) => (t.url || "").startsWith(p))).map((t) => ({ tabId: t.id, title: t.title || "", url: t.url || "" }));
@@ -2364,7 +2364,7 @@
     return await bhSwitchTab(tabs[0].tabId);
   }
 
-  // personalized-extension/extension/browser-harness/src/harness/index.js
+  // extension/browser-harness/src/harness/index.js
   globalThis.BrowserHarness = {
     attach: bhAttach,
     detach: bhDetach,

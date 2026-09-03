@@ -20,7 +20,7 @@
 
 import { createRun, setExtractorNames } from './run.js';
 import { contractFromAsk, gaps, describe, toQuery } from './ask.js';
-import { setParadigmMap, setCountZones } from '../../../tools/auditors/contract-mismatch.js';
+import { setParadigmMap, setCountZones } from '@ai4a11y/tools/auditors/contract-mismatch.js';
 import { setControls } from './render.js';
 
 const KEY = 'aa.validation';

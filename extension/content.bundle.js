@@ -1,5 +1,5 @@
 (() => {
-  // tools/utils/ai.js
+  // node_modules/@ai4a11y/tools/utils/ai.js
   var provider = null;
   function setAIProvider(p) {
     provider = p;
@@ -94,7 +94,7 @@
     return provider.extractChartData(imageDataUrl, context);
   }
 
-  // tools/profiles/settings.json
+  // node_modules/@ai4a11y/tools/profiles/settings.json
   var settings_default = {
     $comment: "Single source of truth for ability profiles. Consumed by tools/profiles/settings.js (bundled into the extension + CLI tools) and read directly by cli/cli.py. Values are evidence-based \u2014 sources: W3C WCAG, W3C COGA, WebAIM Low Vision Survey, AASPIRE autism study, NNGroup UX research.",
     profiles: {
@@ -106,8 +106,7 @@
           autoFixLabels: true,
           autoDescribe: true,
           autoVideoDescribe: true,
-          keyboardNav: true,
-          pageOutline: true,
+          fixLandmarks: true,
           announceUpdates: true,
           describeOnDemand: true,
           languageTag: true,
@@ -341,7 +340,7 @@
     }
   };
 
-  // tools/profiles/settings.js
+  // node_modules/@ai4a11y/tools/profiles/settings.js
   var profiles = settings_default.profiles;
   var defaults = settings_default.defaults;
   var settings = { ...defaults };
@@ -364,7 +363,7 @@
     return settings[feature] === true;
   }
 
-  // tools/utils/dom.js
+  // node_modules/@ai4a11y/tools/utils/dom.js
   function isVisible(el) {
     if (!el) return false;
     const style = getComputedStyle(el);
@@ -409,7 +408,7 @@
     });
   }
 
-  // tools/auditors/wcag-issues.js
+  // node_modules/@ai4a11y/tools/auditors/wcag-issues.js
   async function runAxeAnalysis() {
     if (typeof axe === "undefined") {
       console.warn("[AI4A11y] axe-core not loaded");
@@ -435,7 +434,7 @@
     }
   }
 
-  // tools/utils/image.js
+  // node_modules/@ai4a11y/tools/utils/image.js
   async function imageToDataUrl(img) {
     var _a, _b;
     if (((_a = img.src) == null ? void 0 : _a.startsWith("data:")) || ((_b = img.src) == null ? void 0 : _b.startsWith("blob:"))) {
@@ -519,7 +518,7 @@
     return false;
   }
 
-  // tools/auditors/missing-alt.js
+  // node_modules/@ai4a11y/tools/auditors/missing-alt.js
   function findEmptyAltImages() {
     return Array.from(document.querySelectorAll('img[alt=""]')).filter((img) => {
       if (wasProcessed(img)) return false;
@@ -537,7 +536,7 @@
     });
   }
 
-  // tools/auditors/missing-labels.js
+  // node_modules/@ai4a11y/tools/auditors/missing-labels.js
   function findAmbiguousLinks() {
     const ambiguousTexts = [
       "click here",
@@ -559,7 +558,7 @@
     });
   }
 
-  // tools/adapters/generate-alt.js
+  // node_modules/@ai4a11y/tools/adapters/generate-alt.js
   var logFix = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
@@ -687,7 +686,7 @@
     "svg-img-alt": generateSvgDescription
   };
 
-  // tools/constants.js
+  // node_modules/@ai4a11y/tools/constants.js
   var DEPRECATED_ROLES = {
     directory: "list"
   };
@@ -864,7 +863,7 @@
     "recaptcha": "CAPTCHA verification"
   };
 
-  // tools/adapters/generate-labels.js
+  // node_modules/@ai4a11y/tools/adapters/generate-labels.js
   var logFix2 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1081,7 +1080,7 @@
     "select-name": generateFormLabel
   };
 
-  // tools/adapters/generate-captions.js
+  // node_modules/@ai4a11y/tools/adapters/generate-captions.js
   var logFix3 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat3 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1194,7 +1193,7 @@ ${chunk}
     "audio-caption": generateAudioCaptions
   };
 
-  // tools/adapters/simplify-text.js
+  // node_modules/@ai4a11y/tools/adapters/simplify-text.js
   var logFix4 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat4 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1312,7 +1311,7 @@ ${chunk}
     }
   }
 
-  // tools/utils/color.js
+  // node_modules/@ai4a11y/tools/utils/color.js
   function parseColor(color) {
     if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
       return null;
@@ -1420,7 +1419,7 @@ ${chunk}
     return `rgb(${base.r}, ${base.g}, ${base.b})`;
   }
 
-  // tools/adapters/fix-contrast.js
+  // node_modules/@ai4a11y/tools/adapters/fix-contrast.js
   var logFix5 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1487,7 +1486,7 @@ ${chunk}
     "link-in-text-block": fixIndistinguishableLink
   };
 
-  // tools/adapters/wcag-fixes.js
+  // node_modules/@ai4a11y/tools/adapters/wcag-fixes.js
   var logFix6 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat6 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1699,7 +1698,7 @@ ${chunk}
     "marquee": replaceObsoleteElement
   };
 
-  // tools/adapters/fix-links.js
+  // node_modules/@ai4a11y/tools/adapters/fix-links.js
   var logFix7 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat7 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1736,7 +1735,7 @@ ${chunk}
     return results.filter(Boolean);
   }
 
-  // tools/adapters/fix-tables.js
+  // node_modules/@ai4a11y/tools/adapters/fix-tables.js
   var logFix8 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat8 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1830,7 +1829,7 @@ ${chunk}
     return results.filter(Boolean).length;
   }
 
-  // tools/adapters/fix-landmarks.js
+  // node_modules/@ai4a11y/tools/adapters/fix-landmarks.js
   var logFix9 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat9 = globalThis.ai4a11yIncrementStat || (() => {
@@ -1868,6 +1867,35 @@ ${chunk}
     console.log('[AI4A11y] Added role="main" landmark');
     return true;
   }
+  var HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+  var FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
+  var COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
+  var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
+  function ensureBanner() {
+    if (document.querySelector('header, [role="banner"]')) return false;
+    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => {
+      var _a;
+      return (((_a = e.textContent) == null ? void 0 : _a.trim().length) || 0) < 2e3;
+    })[0];
+    if (!el) return false;
+    el.setAttribute("role", "banner");
+    incrementStat9("wcag");
+    logFix9("landmark", el, "(unmarked header)", 'role="banner"');
+    return true;
+  }
+  function ensureContentinfo() {
+    if (document.querySelector('footer, [role="contentinfo"]')) return false;
+    const cands = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role")).filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || "").slice(-400))).filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')).filter((e) => {
+      var _a;
+      return (((_a = e.textContent) == null ? void 0 : _a.trim().length) || 0) < 1500;
+    });
+    const el = cands[cands.length - 1];
+    if (!el) return false;
+    el.setAttribute("role", "contentinfo");
+    incrementStat9("wcag");
+    logFix9("landmark", el, "(unmarked footer)", 'role="contentinfo"');
+    return true;
+  }
   function ensureStructuralLandmarks() {
     let fixed = 0;
     document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
@@ -1883,6 +1911,8 @@ ${chunk}
         fixed++;
       }
     });
+    if (ensureBanner()) fixed++;
+    if (ensureContentinfo()) fixed++;
     return fixed;
   }
   function fixLandmarks() {
@@ -1894,8 +1924,27 @@ ${chunk}
   var axeHandlers6 = {
     "landmark-one-main": () => ensureMainLandmark()
   };
+  var FixLandmarks = {
+    id: "fix-landmarks",
+    enabled: false,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      try {
+        fixLandmarks();
+      } catch {
+      }
+    },
+    disable() {
+      this.enabled = false;
+    },
+    toggle() {
+      this.enabled ? this.disable() : this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFixLandmarks = FixLandmarks;
 
-  // tools/utils/observe.js
+  // node_modules/@ai4a11y/tools/utils/observe.js
   var _sweeps = /* @__PURE__ */ new Map();
   var _observer = null;
   var _debounceTimers = /* @__PURE__ */ new Map();
@@ -1961,7 +2010,7 @@ ${chunk}
     };
   }
 
-  // tools/adapters/visual-assist.js
+  // node_modules/@ai4a11y/tools/adapters/visual-assist.js
   var _fontScaleOriginals = /* @__PURE__ */ new WeakMap();
   var TEXT_ELEMENT_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, input, textarea, label, blockquote, pre, figcaption, caption, dt, dd, summary, article, section, header, footer, nav, main, aside";
   function _shouldSkipScale(el) {
@@ -2269,7 +2318,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yVisualAssist = VisualAssist;
 
-  // tools/adapters/dark-mode.js
+  // node_modules/@ai4a11y/tools/adapters/dark-mode.js
   var DarkMode = {
     enabled: false,
     styleId: "ai4a11y-dark-mode",
@@ -2351,9 +2400,9 @@ ${chunk}
       }
     }
   };
-  window.__ai4a11yDarkMode = DarkMode;
+  if (typeof window !== "undefined") window.__ai4a11yDarkMode = DarkMode;
 
-  // tools/adapters/motion-reducer.js
+  // node_modules/@ai4a11y/tools/adapters/motion-reducer.js
   var MotionReducer = {
     styleId: "ai4a11y-motion-reducer-styles",
     enabled: false,
@@ -2624,7 +2673,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yMotionReducer = MotionReducer;
 
-  // tools/adapters/focus-mode.js
+  // node_modules/@ai4a11y/tools/adapters/focus-mode.js
   var FocusMode = {
     styleId: "ai4a11y-focus-mode-styles",
     enabled: false,
@@ -2759,9 +2808,9 @@ ${chunk}
       }
     }
   };
-  window.__ai4a11yFocusMode = FocusMode;
+  if (typeof window !== "undefined") window.__ai4a11yFocusMode = FocusMode;
 
-  // tools/adapters/read-aloud.js
+  // node_modules/@ai4a11y/tools/adapters/read-aloud.js
   var ReadAloud = {
     speaking: false,
     paused: false,
@@ -2936,7 +2985,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yReadAloud = ReadAloud;
 
-  // tools/adapters/reader-mode.js
+  // node_modules/@ai4a11y/tools/adapters/reader-mode.js
   var ReaderMode = {
     enabled: false,
     originalContent: null,
@@ -3022,7 +3071,7 @@ ${chunk}
     // Strip Readability output down to safe HTML before injecting it with
     // innerHTML. No DOMPurify dependency is vendored for tools/ (only the
     // extension's popup.html loads it as a devDependency of
-    // personalized-extension), so this replicates DOMPurify's HTML-profile
+    // a browser host), so this replicates DOMPurify's HTML-profile
     // sanitize with a hand-rolled allowlist-of-dangers pass: strip
     // script-capable elements, all `on*` handlers, and URL-bearing attributes
     // that carry an executable scheme (javascript:/vbscript:/data:text/html
@@ -3117,7 +3166,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yReaderMode = ReaderMode;
 
-  // tools/adapters/voice-commands.js
+  // node_modules/@ai4a11y/tools/adapters/voice-commands.js
   var VoiceCommands = {
     enabled: false,
     recognition: null,
@@ -3326,7 +3375,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yVoiceCommands = VoiceCommands;
 
-  // tools/adapters/keyboard-nav.js
+  // node_modules/@ai4a11y/tools/adapters/keyboard-nav.js
   function getFocusable(root) {
     return Array.from(root.querySelectorAll(
       'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -3612,7 +3661,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
 
-  // tools/adapters/color-blind.js
+  // node_modules/@ai4a11y/tools/adapters/color-blind.js
   var ColorBlindMode = {
     styleId: "ai4a11y-color-blind-styles",
     filterId: "ai4a11y-svg-filters",
@@ -3703,9 +3752,9 @@ ${chunk}
       }
     }
   };
-  window.__ai4a11yColorBlindMode = ColorBlindMode;
+  if (typeof window !== "undefined") window.__ai4a11yColorBlindMode = ColorBlindMode;
 
-  // tools/adapters/auto-transcriber.js
+  // node_modules/@ai4a11y/tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
     observer: null,
@@ -3903,9 +3952,9 @@ ${chunk}
       else this.enable();
     }
   };
-  window.__ai4a11yAutoTranscriber = AutoTranscriber;
+  if (typeof window !== "undefined") window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
-  // tools/adapters/dismiss-overlays.js
+  // node_modules/@ai4a11y/tools/adapters/dismiss-overlays.js
   var OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
   function classNameOf(el) {
     const c = el.className;
@@ -4015,7 +4064,7 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yDismissOverlays = DismissOverlays;
 
-  // tools/adapters/big-targets.js
+  // node_modules/@ai4a11y/tools/adapters/big-targets.js
   var TARGET_SELECTORS = ["a", "button", "input", '[role="button"]', "[onclick]"];
   var BigTargets = {
     styleId: "ai4a11y-big-targets-styles",
@@ -4073,7 +4122,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
 
-  // tools/adapters/link-highlighter.js
+  // node_modules/@ai4a11y/tools/adapters/link-highlighter.js
   var LinkHighlighter = {
     styleId: "ai4a11y-link-highlighter-styles",
     bodyClass: "ai4a11y-highlight-links",
@@ -4193,107 +4242,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yLinkHighlighter = LinkHighlighter;
 
-  // tools/adapters/page-outline.js
-  var PageOutline = {
-    containerId: "ai4a11y-page-outline",
-    enabled: false,
-    addedIds: null,
-    // Set of headings we gave a generated id (for exact restore)
-    addedTabindex: null,
-    // Set of headings we gave tabindex="-1" (for exact restore)
-    enable(options = {}) {
-      if (this.enabled) return;
-      this.enabled = true;
-      this.addedIds = /* @__PURE__ */ new Set();
-      this.addedTabindex = /* @__PURE__ */ new Set();
-      const selector = options.selector || "h1, h2, h3";
-      let headings = [];
-      try {
-        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
-      } catch {
-      }
-      const nav = document.createElement("nav");
-      nav.id = this.containerId;
-      nav.setAttribute("role", "navigation");
-      nav.setAttribute("aria-label", "Page outline");
-      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
-      if (headings.length === 0) {
-        const note = document.createElement("p");
-        note.textContent = "No headings on this page";
-        nav.appendChild(note);
-      } else {
-        const list = document.createElement("ul");
-        list.style.cssText = "list-style: none; margin: 0; padding: 0;";
-        let n = 0;
-        for (const heading of headings) {
-          if (!heading.id) {
-            let id;
-            do {
-              id = `ai4a11y-outline-h-${n++}`;
-            } while (document.getElementById(id));
-            heading.id = id;
-            this.addedIds.add(heading);
-          }
-          const item = document.createElement("li");
-          const level = Number(heading.tagName[1]) || 1;
-          item.style.paddingLeft = `${(level - 1) * 16}px`;
-          const link = document.createElement("a");
-          link.href = `#${heading.id}`;
-          link.textContent = heading.textContent.trim();
-          link.addEventListener("click", () => this.jumpTo(heading));
-          item.appendChild(link);
-          list.appendChild(item);
-        }
-        nav.appendChild(list);
-      }
-      try {
-        (document.body || document.documentElement).appendChild(nav);
-      } catch {
-      }
-      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
-      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
-    },
-    // Move both the viewport and keyboard/screen-reader focus to the heading.
-    // Headings aren't focusable by default, so add tabindex="-1" — tracked so
-    // disable() removes it again.
-    jumpTo(heading) {
-      var _a;
-      try {
-        if (!heading.hasAttribute("tabindex")) {
-          heading.setAttribute("tabindex", "-1");
-          (_a = this.addedTabindex) == null ? void 0 : _a.add(heading);
-        }
-        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
-        heading.focus();
-      } catch {
-      }
-    },
-    disable() {
-      var _a;
-      if (!this.enabled) return;
-      this.enabled = false;
-      (_a = document.getElementById(this.containerId)) == null ? void 0 : _a.remove();
-      if (this.addedIds) {
-        for (const h of this.addedIds) h.removeAttribute("id");
-        this.addedIds.clear();
-        this.addedIds = null;
-      }
-      if (this.addedTabindex) {
-        for (const h of this.addedTabindex) h.removeAttribute("tabindex");
-        this.addedTabindex.clear();
-        this.addedTabindex = null;
-      }
-      console.log("[AI4A11y] Page Outline disabled");
-      announce("Page outline removed");
-    },
-    toggle() {
-      if (this.enabled) this.disable();
-      else this.enable();
-    }
-  };
-  if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
-
-  // tools/adapters/_primitives.js
+  // node_modules/@ai4a11y/tools/adapters/_primitives.js
   function injectStyle(id, css, doc = typeof document !== "undefined" ? document : null) {
     if (!doc) return { remove() {
     } };
@@ -4381,7 +4330,126 @@ ${scope(":focus")} {
     return doc.querySelector('main, article, [role="main"], .content, #content') || doc.body || null;
   }
 
-  // tools/adapters/bionic-reading.js
+  // node_modules/@ai4a11y/tools/adapters/page-outline.js
+  var PageOutline = {
+    containerId: "ai4a11y-page-outline",
+    enabled: false,
+    style: null,
+    // the scoped colour stylesheet (removed on disable)
+    addedIds: null,
+    // Set of headings we gave a generated id (for exact restore)
+    addedTabindex: null,
+    // Set of headings we gave tabindex="-1" (for exact restore)
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.addedIds = /* @__PURE__ */ new Set();
+      this.addedTabindex = /* @__PURE__ */ new Set();
+      this.style = injectStyle(`${this.containerId}-styles`, `
+#${this.containerId} { background: #ffffff !important; color: #111111 !important; border-color: #333333 !important; }
+#${this.containerId} p, #${this.containerId} li { color: #111111 !important; }
+#${this.containerId} a,
+#${this.containerId} a:link,
+#${this.containerId} a:visited,
+#${this.containerId} a:hover,
+#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }`);
+      const selector = options.selector || "h1, h2, h3";
+      let headings = [];
+      try {
+        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
+      } catch {
+      }
+      const nav = document.createElement("nav");
+      nav.id = this.containerId;
+      nav.setAttribute("role", "navigation");
+      nav.setAttribute("aria-label", "Page outline");
+      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
+      if (headings.length === 0) {
+        const note = document.createElement("p");
+        note.textContent = "No headings on this page";
+        nav.appendChild(note);
+      } else {
+        const list = document.createElement("ul");
+        list.style.cssText = "list-style: none; margin: 0; padding: 0;";
+        let n = 0;
+        for (const heading of headings) {
+          if (!heading.id) {
+            let id;
+            do {
+              id = `ai4a11y-outline-h-${n++}`;
+            } while (document.getElementById(id));
+            heading.id = id;
+            this.addedIds.add(heading);
+          }
+          const item = document.createElement("li");
+          const level = Number(heading.tagName[1]) || 1;
+          item.style.paddingLeft = `${(level - 1) * 16}px`;
+          const link = document.createElement("a");
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent.trim();
+          link.addEventListener("click", () => this.jumpTo(heading));
+          item.appendChild(link);
+          list.appendChild(item);
+        }
+        nav.appendChild(list);
+      }
+      try {
+        (document.body || document.documentElement).appendChild(nav);
+      } catch {
+      }
+      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
+      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
+    },
+    // Move both the viewport and keyboard/screen-reader focus to the heading.
+    // Headings aren't focusable by default, so add tabindex="-1" — tracked so
+    // disable() removes it again.
+    jumpTo(heading) {
+      var _a;
+      try {
+        if (!heading.hasAttribute("tabindex")) {
+          heading.setAttribute("tabindex", "-1");
+          (_a = this.addedTabindex) == null ? void 0 : _a.add(heading);
+        }
+        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
+        heading.focus();
+      } catch {
+      }
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      (_a = document.getElementById(this.containerId)) == null ? void 0 : _a.remove();
+      try {
+        (_b = this.style) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      try {
+        (_c = document.getElementById(`${this.containerId}-styles`)) == null ? void 0 : _c.remove();
+      } catch {
+      }
+      this.style = null;
+      if (this.addedIds) {
+        for (const h of this.addedIds) h.removeAttribute("id");
+        this.addedIds.clear();
+        this.addedIds = null;
+      }
+      if (this.addedTabindex) {
+        for (const h of this.addedTabindex) h.removeAttribute("tabindex");
+        this.addedTabindex.clear();
+        this.addedTabindex = null;
+      }
+      console.log("[AI4A11y] Page Outline disabled");
+      announce("Page outline removed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
+
+  // node_modules/@ai4a11y/tools/adapters/bionic-reading.js
   var MAX_TEXT_NODES = 2e3;
   var BionicReading = {
     markerClass: "ai4a11y-bionic",
@@ -4443,7 +4511,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yBionicReading = BionicReading;
 
-  // tools/adapters/unpin-sticky.js
+  // node_modules/@ai4a11y/tools/adapters/unpin-sticky.js
   var UnpinSticky = {
     styleId: "ai4a11y-unpin-sticky-styles",
     unpinnedClass: "ai4a11y-unpinned",
@@ -4530,7 +4598,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
 
-  // tools/adapters/translate-page.js
+  // node_modules/@ai4a11y/tools/adapters/translate-page.js
   var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
   var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
   var MAX_BLOCKS = 80;
@@ -4605,7 +4673,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yTranslatePage = TranslatePage;
 
-  // tools/adapters/mute-sounds.js
+  // node_modules/@ai4a11y/tools/adapters/mute-sounds.js
   var MuteSounds = {
     enabled: false,
     muted: null,
@@ -4701,7 +4769,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yMuteSounds = MuteSounds;
 
-  // tools/adapters/define-words.js
+  // node_modules/@ai4a11y/tools/adapters/define-words.js
   var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "A", "BUTTON"]);
   var MAX_WORDS = 500;
   var STYLE_ID = "ai4a11y-define-styles";
@@ -4956,7 +5024,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yDefineWords = DefineWords;
 
-  // tools/adapters/stop-auto-advance.js
+  // node_modules/@ai4a11y/tools/adapters/stop-auto-advance.js
   var CAROUSEL_SELECTOR = '[class*="carousel"], [class*="slider"], [class*="rotat"], [class*="ticker"], [class*="marquee"], [aria-roledescription="carousel"]';
   var StopAutoAdvance = {
     styleId: "ai4a11y-stop-autoadvance-styles",
@@ -5121,7 +5189,7 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yStopAutoAdvance = StopAutoAdvance;
 
-  // tools/adapters/reduce-brightness.js
+  // node_modules/@ai4a11y/tools/adapters/reduce-brightness.js
   var ReduceBrightness = {
     styleId: "ai4a11y-reduce-brightness-styles",
     htmlClass: "ai4a11y-dimmed",
@@ -5182,7 +5250,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yReduceBrightness = ReduceBrightness;
 
-  // tools/adapters/sound-visualizer.js
+  // node_modules/@ai4a11y/tools/adapters/sound-visualizer.js
   var INDICATOR_ID = "ai4a11y-sound-indicator";
   var FLASH_MS = 1200;
   function isAudible(el) {
@@ -5259,7 +5327,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11ySoundVisualizer = SoundVisualizer;
 
-  // tools/adapters/live-region-announcer.js
+  // node_modules/@ai4a11y/tools/adapters/live-region-announcer.js
   var REGION_ID = "ai4a11y-live-region";
   var MAX_ANNOUNCE_CHARS = 200;
   var LiveRegionAnnouncer = {
@@ -5370,7 +5438,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yLiveRegionAnnouncer = LiveRegionAnnouncer;
 
-  // tools/adapters/magnifier.js
+  // node_modules/@ai4a11y/tools/adapters/magnifier.js
   var Magnifier = {
     lensId: "ai4a11y-magnifier",
     enabled: false,
@@ -5503,7 +5571,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yMagnifier = Magnifier;
 
-  // tools/adapters/flash-guard.js
+  // node_modules/@ai4a11y/tools/adapters/flash-guard.js
   var FlashGuard = {
     styleId: "ai4a11y-flash-guard-styles",
     enabled: false,
@@ -5594,7 +5662,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yFlashGuard = FlashGuard;
 
-  // tools/adapters/describe-on-demand.js
+  // node_modules/@ai4a11y/tools/adapters/describe-on-demand.js
   var DescribeOnDemand = {
     styleId: "ai4a11y-describe-styles",
     enabled: false,
@@ -5735,7 +5803,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yDescribeOnDemand = DescribeOnDemand;
 
-  // tools/adapters/reflow-column.js
+  // node_modules/@ai4a11y/tools/adapters/reflow-column.js
   var ReflowColumn = {
     styleId: "ai4a11y-reflow-column-styles",
     rootClass: "ai4a11y-reflow",
@@ -5751,8 +5819,17 @@ ${scope} body {
   max-width: ${width}px !important;
   margin: 0 auto !important;
 }
-/* Floats and CSS multi-column are what put content side by side. */
-${scope} * {
+/* Floats and CSS multi-column are what put content side by side. Scoped to a
+ * FINITE set of block/layout/media elements rather than a universal selector:
+ * a universal !important rule defeats the browser style-sharing and forces a
+ * whole-tree style+layout recalc that locks the main thread for seconds on
+ * large pages. These are the elements that actually get floated or become
+ * multi-column; inline/text/table-cell leaves are left untouched. */
+${scope} div, ${scope} section, ${scope} article, ${scope} aside, ${scope} main,
+${scope} header, ${scope} footer, ${scope} nav, ${scope} figure, ${scope} figcaption,
+${scope} p, ${scope} ul, ${scope} ol, ${scope} dl, ${scope} li, ${scope} table,
+${scope} blockquote, ${scope} pre, ${scope} form, ${scope} fieldset,
+${scope} img, ${scope} picture, ${scope} video, ${scope} iframe {
   float: none !important;
   column-count: 1 !important;
 }
@@ -5808,7 +5885,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yReflowColumn = ReflowColumn;
 
-  // tools/adapters/focus-locator.js
+  // node_modules/@ai4a11y/tools/adapters/focus-locator.js
   var FocusLocator = {
     styleId: "ai4a11y-focus-locator-styles",
     ringId: "ai4a11y-focus-ring",
@@ -5923,7 +6000,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yFocusLocator = FocusLocator;
 
-  // tools/adapters/persistent-hover.js
+  // node_modules/@ai4a11y/tools/adapters/persistent-hover.js
   var PersistentHover = {
     styleId: "ai4a11y-persistent-hover-styles",
     tipId: "ai4a11y-hover-tip",
@@ -6034,7 +6111,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yPersistentHover = PersistentHover;
 
-  // tools/adapters/reading-ruler.js
+  // node_modules/@ai4a11y/tools/adapters/reading-ruler.js
   var ReadingRuler = {
     bandId: "ai4a11y-reading-ruler",
     enabled: false,
@@ -6129,7 +6206,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
 
-  // tools/adapters/confirm-actions.js
+  // node_modules/@ai4a11y/tools/adapters/confirm-actions.js
   var DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account)\b/i;
   var ConfirmActions = {
     promptId: "ai4a11y-confirm-prompt",
@@ -6230,7 +6307,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yConfirmActions = ConfirmActions;
 
-  // tools/adapters/reading-spot.js
+  // node_modules/@ai4a11y/tools/adapters/reading-spot.js
   var KEY_PREFIX = "ai4a11y-spot:";
   var SAVE_DELAY_MS = 500;
   var ReadingSpot = {
@@ -6327,7 +6404,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yReadingSpot = ReadingSpot;
 
-  // tools/adapters/abbreviation-expand.js
+  // node_modules/@ai4a11y/tools/adapters/abbreviation-expand.js
   var logFix10 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_TEXT_NODES2 = 2e3;
@@ -6502,7 +6579,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yAbbreviationExpand = AbbreviationExpand;
 
-  // tools/adapters/language-tag.js
+  // node_modules/@ai4a11y/tools/adapters/language-tag.js
   var logFix11 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_TEXT_NODES3 = 2e3;
@@ -6686,7 +6763,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yLanguageTag = LanguageTag;
 
-  // tools/adapters/explore-a-chart.js
+  // node_modules/@ai4a11y/tools/adapters/explore-a-chart.js
   var logFix12 = globalThis.ai4a11yLogFix || (() => {
   });
   var CHART_HINT = /chart|graph|plot|diagram/i;
@@ -6797,8 +6874,8 @@ ${scope} table {
       btn.type = "button";
       btn.className = "ai4a11y-chart-btn";
       btn.textContent = "View data table";
-      const hint = this.contextText(chart);
-      btn.setAttribute("aria-label", hint ? `View data table for chart: ${hint}` : "View data table for this chart");
+      const hint2 = this.contextText(chart);
+      btn.setAttribute("aria-label", hint2 ? `View data table for chart: ${hint2}` : "View data table for this chart");
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -6979,7 +7056,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yExploreAChart = ExploreAChart;
 
-  // tools/adapters/spa-focus.js
+  // node_modules/@ai4a11y/tools/adapters/spa-focus.js
   var logFix13 = globalThis.ai4a11yLogFix || (() => {
   });
   var REGION_ID2 = "ai4a11y-spa-focus-region";
@@ -7107,7 +7184,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11ySpaFocus = SpaFocus;
 
-  // tools/adapters/skip-links.js
+  // node_modules/@ai4a11y/tools/adapters/skip-links.js
   var logFix14 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAIN_SELECTOR = 'main, [role="main"], #main, #content, .content';
@@ -7238,7 +7315,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
 
-  // tools/adapters/math-a11y.js
+  // node_modules/@ai4a11y/tools/adapters/math-a11y.js
   var logFix15 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_ELEMENTS = 100;
@@ -7421,7 +7498,7 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yMathA11y = MathA11y;
 
-  // tools/adapters/index.js
+  // node_modules/@ai4a11y/tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
     ...axeHandlers2,

@@ -23,9 +23,12 @@ work on them belongs there, not here.
 
 ## Builds and tests
 
-The committed bundles are the runnable state. Full builds resolve paths into
-the toolkit repo's tree, so rebuilds happen there and land here as commits.
-Never hand-edit a `*.bundle.js` or a generated `lib/` file.
+The committed bundles are the runnable state, and this repository rebuilds
+them itself from the vendored `@ai4a11y/toolkit` and `@ai4a11y/tools`
+packages (`vendor/`, pinned by `vendor/PIN.json`; bump with
+`node scripts/update-vendor.mjs --commit <sha>`). `npm ci` in both roots,
+then `npm run build`. Never hand-edit a `*.bundle.js` or a generated
+`lib/` file.
 
 ```bash
 npm test               # Librarian regression suite; the one fully self-contained suite
@@ -33,10 +36,10 @@ npm run check:loadable # every file the two manifests and service workers refere
 npm run check:chrome   # loads both extensions in a real Chrome (needs Chrome + npm ci)
 ```
 
-`check:loadable` is what stops a build output going missing from a commit.
-Because nothing here rebuilds the bundles, an output that is absent, or
-caught by a `.gitignore` rule, is otherwise invisible until Chrome refuses
-to load the extension.
+`check:loadable` is what stops a build output going missing from a commit:
+an output that is absent, or caught by a `.gitignore` rule, is otherwise
+invisible until Chrome refuses to load the extension. CI also rebuilds both
+extensions and fails on any diff against the committed outputs.
 
 ## Known tradeoffs (context for reviewers)
 

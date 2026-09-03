@@ -1,5 +1,5 @@
 (() => {
-  // personalized-extension/extension/browser-harness/src/agent/constants.js
+  // extension/browser-harness/src/agent/constants.js
   var BH_AGENT_KEY = "bhAgent";
   var BH_AGENT_LOG_LIMIT = 200;
   var BH_AGENT_HISTORY_CHAR_THRESHOLD = 3e4;
@@ -114,7 +114,7 @@ Rules:
 - If the screenshot or pageInfo shows {"dialog": ...}, the page's JS thread is frozen -- handle_dialog before doing anything else.
 - Use "js" to extract structured data (titles, lists, attributes, JSON from the page). The return value is recorded in the history and visible to you on the next turn -- preferable to remembering it in "memory" by hand for anything large.`;
 
-  // personalized-extension/extension/browser-harness/src/agent/state.js
+  // extension/browser-harness/src/agent/state.js
   var _bhAgentSystemPrompt = BH_AGENT_SYSTEM_PROMPT_BASE;
   function setSystemPrompt(s) {
     _bhAgentSystemPrompt = s;
@@ -268,7 +268,7 @@ Rules:
     _bhAgentSystemPrompt = BH_AGENT_SYSTEM_PROMPT_BASE;
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/prompt.js
+  // extension/browser-harness/src/agent/prompt.js
   async function _bhBuildSystemPrompt() {
     const Skills = globalThis.BrowserSkills;
     if (!Skills) return BH_AGENT_SYSTEM_PROMPT_BASE;
@@ -336,7 +336,7 @@ Rules:
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/format.js
+  // extension/browser-harness/src/agent/format.js
   function _bhAgentFormatInteractiveList(items, structurals, prevHashes) {
     if (!items || !items.length) return { text: "", hashes: /* @__PURE__ */ new Set() };
     const hashes = /* @__PURE__ */ new Set();
@@ -394,7 +394,7 @@ Rules:
     };
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/tabs.js
+  // extension/browser-harness/src/agent/tabs.js
   async function _bhAgentGroupTab(tabId, task, existingGroupId = null) {
     if (!chrome.tabs?.group || !chrome.tabGroups?.update) return null;
     try {
@@ -481,7 +481,7 @@ Rules:
     chrome.tabs.onCreated._bhAgentInstalled = true;
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/notify.js
+  // extension/browser-harness/src/agent/notify.js
   function _bhAgentNotify(outcome, task, message) {
     if (!chrome.notifications || !chrome.notifications.create) return;
     const titles = {
@@ -535,7 +535,7 @@ ${message || ""}`),
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/action-extract.js
+  // extension/browser-harness/src/agent/action-extract.js
   function _bhAgentParseAction(text) {
     let s = (text || "").trim();
     if (s.startsWith("```")) {
@@ -579,7 +579,7 @@ ${message || ""}`),
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/error.js
+  // extension/browser-harness/src/agent/error.js
   async function _bhWithActionTimeout(label, ms, fn) {
     if (!Number.isFinite(ms) || ms <= 0) return fn();
     let timer;
@@ -606,7 +606,7 @@ ${message || ""}`),
     return { kind: "transient", msg };
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/history.js
+  // extension/browser-harness/src/agent/history.js
   async function _bhAgentCompactHistoryIfNeeded(history, task) {
     const callGemini = getGeminiCaller();
     if (!callGemini) return false;
@@ -694,7 +694,7 @@ ${message || ""}`),
     return "History (full):\n\n" + history.map(_bhAgentRenderHistoryEntry).join("\n\n");
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/ask.js
+  // extension/browser-harness/src/agent/ask.js
   async function _bhAgentAsk(task, screenshotB64, history, opts = {}) {
     const callGemini = getGeminiCaller();
     if (!callGemini) throw new Error("agent: gemini caller not configured");
@@ -748,7 +748,7 @@ ${getCurrentMemory()}` : "";
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/exec.js
+  // extension/browser-harness/src/agent/exec.js
   async function _bhAgentGate(action) {
     const V = globalThis.Validation;
     if (!V || !V.isRunning()) return { allowed: true };
@@ -1062,7 +1062,7 @@ ${getCurrentMemory()}` : "";
     }
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/run.js
+  // extension/browser-harness/src/agent/run.js
   async function _bhDecideTabMode(task, activeTab) {
     const gemini = getGeminiCaller();
     if (!gemini || !activeTab) {
@@ -1496,7 +1496,7 @@ One word only.`;
     await chrome.storage.local.remove(BH_AGENT_KEY);
   }
 
-  // personalized-extension/extension/browser-harness/src/agent/index.js
+  // extension/browser-harness/src/agent/index.js
   globalThis.BrowserAgent = {
     run: bhAgentRun,
     stop: bhAgentStop,
