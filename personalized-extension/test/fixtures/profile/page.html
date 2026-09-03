@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Profile journey fixture</title>
+  <style>
+    /* Fixed baselines so the journey can compare the page against exact
+       numbers before and after an access need is switched on. */
+    body { margin: 2rem; background: #ffffff; color: #111111; }
+    h1 { font-size: 32px; }
+    p { font-size: 16px; line-height: 1.5; letter-spacing: normal; }
+  </style>
+</head>
+<body>
+  <h1>Profile journey fixture</h1>
+  <p id="sample">
+    A paragraph of ordinary body text. It is here so the journey can read one
+    element's computed style before an access need is switched on, after it is
+    switched on, and after it is withdrawn.
+  </p>
+  <p>
+    A second paragraph with <a href="#target" id="sample-link">a link</a> in it.
+  </p>
+  <button type="button" id="sample-button">A button</button>
+  <p id="target">The link target.</p>
+</body>
+</html>

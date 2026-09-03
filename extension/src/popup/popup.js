@@ -7,7 +7,20 @@
  * so the popup, content script, and CLI all read the same data.
  */
 
-import { mergeProfileTools } from '@ai4a11y/tools/profiles/settings.js';
+import {
+  mergeProfileTools,
+  profiles as profilePresets,
+  defaults as profileDefaults,
+} from '@ai4a11y/tools/profiles/settings.js';
+
+// Every setting any profile can switch on. applyPreset writes the whole merged
+// preset to storage, including the settings that have no popup control, so a
+// reset that clears only the controls leaves the rest switched on and the
+// content script turns them back on at the next page load. Resetting this whole
+// set is what makes withdrawing a profile stick.
+const PROFILE_SETTING_KEYS = [...new Set(
+  Object.values(profilePresets).flatMap(p => Object.keys(p.tools || {}))
+)];
 
 // Safe element setters
 function setChecked(id, value) {
@@ -423,6 +436,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     storageReset.fontScale = 100;
     storageReset.lineHeight = 1.5;
     storageReset.letterSpacing = 0;
+    for (const key of PROFILE_SETTING_KEYS) {
+      if (key in storageReset) continue;
+      storageReset[key] = profileDefaults[key] !== undefined ? profileDefaults[key] : false;
+    }
     if (!preserveProfile) {
       storageReset.selectedProfiles = [];
     }
