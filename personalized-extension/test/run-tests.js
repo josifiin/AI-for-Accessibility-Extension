@@ -1696,6 +1696,34 @@ server.listen(PORT, async () => {
       console.log('FAIL (#24): could not parse AI_TOOL_MAP from content.js');
     }
 
+    // The actuation port keeps two hand-written tables for the same settings:
+    // SIMPLE_TOOLS (which content tool a stored toggle live-applies) and
+    // SETTING_DEFAULTS (the baseline it reports against and restores on undo).
+    // A key in one but not the other is applied yet never reported, or
+    // reported yet never applied. Every SIMPLE_TOOLS value must also be a
+    // real TOOL_MAP key, or the enable message goes nowhere.
+    {
+      const simpleTools = extractMapKeys(chromeActuationCode, 'SIMPLE_TOOLS');
+      const settingDefaults = extractMapKeys(chromeActuationCode, 'SETTING_DEFAULTS');
+      const simpleToolTargets = [...chromeActuationCode.match(/const\s+SIMPLE_TOOLS\s*=\s*\{([^}]+)\}/s)[1].matchAll(/:\s*'(\w+)'/g)].map((m) => m[1]);
+      if (simpleTools.size === 0 || settingDefaults.size === 0) {
+        console.log('FAIL (#24): could not parse SIMPLE_TOOLS / SETTING_DEFAULTS from chrome-actuation.js');
+      } else {
+        const missingDefault = [...simpleTools].filter((k) => !settingDefaults.has(k));
+        if (missingDefault.length === 0) {
+          console.log(`PASS (#24): every SIMPLE_TOOLS key has a SETTING_DEFAULTS baseline (${simpleTools.size} keys)`);
+        } else {
+          console.log(`FAIL (#24): SIMPLE_TOOLS keys without a SETTING_DEFAULTS baseline: ${missingDefault.join(', ')}`);
+        }
+        const missingTool = simpleToolTargets.filter((t) => !toolMapKeys.has(t));
+        if (missingTool.length === 0) {
+          console.log(`PASS (#24): every SIMPLE_TOOLS target is a content.js TOOL_MAP key`);
+        } else {
+          console.log(`FAIL (#24): SIMPLE_TOOLS targets missing from TOOL_MAP: ${missingTool.join(', ')}`);
+        }
+      }
+    }
+
     // Assert every expected demand-tier key is a real map key (not just a substring).
     const toolMapExpected = new Set(['DarkMode', 'FocusMode', 'VisualAssist', 'MotionReducer',
       'ReaderMode', 'ColorBlindMode', 'KeyboardNavigator', 'VoiceCommands', 'ReadAloud']);

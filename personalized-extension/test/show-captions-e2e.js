@@ -114,7 +114,7 @@ async function main() {
     server.close();
   }
 
-  process.exit(finish() ? 1 : 0);
+  process.exitCode = finish() ? 1 : 0;
 }
 
 main().catch((e) => {

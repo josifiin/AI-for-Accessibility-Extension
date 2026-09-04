@@ -32,7 +32,7 @@
 // with the other journeys in scripts/e2e-chrome.js.
 const path = require('path');
 const {
-  findChrome, startFixtureServer, launchWithExtension, makeChecks, sleep, waitFor, waitForStorage,
+  findChrome, startFixtureServer, launchWithExtension, makeChecks, sleep, waitForStorage,
 } = require('../../scripts/e2e-chrome.js');
 
 const { check, finish } = makeChecks();
@@ -106,7 +106,7 @@ async function main() {
   const fixtureUrl = `http://127.0.0.1:${server.address().port}/page.html`;
 
   const session = await launchWithExtension({ chrome, extPath: EXT_PATH, profilePrefix: 'aa-pe-journey-' });
-  const { browser, extId, worker, readStorage } = session;
+  const { browser, extId, readStorage } = session;
 
   try {
 
