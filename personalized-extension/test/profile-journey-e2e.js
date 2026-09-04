@@ -28,11 +28,14 @@
 //
 // Needs a local Chrome, so CI skips it.
 
-const fs = require('fs');
-const http = require('http');
-const os = require('os');
+// Chrome discovery, the fixture server, and the extension launch are shared
+// with the other journeys in scripts/e2e-chrome.js.
 const path = require('path');
-const puppeteer = require('puppeteer-core');
+const {
+  findChrome, startFixtureServer, launchWithExtension, makeChecks, sleep, waitFor, waitForStorage,
+} = require('../../scripts/e2e-chrome.js');
+
+const { check, finish } = makeChecks();
 
 const EXT_PATH = path.resolve(__dirname, '..', 'extension');
 const FIXTURE_DIR = path.join(__dirname, 'fixtures', 'profile');
@@ -49,55 +52,6 @@ const ONBOARDING = {
 };
 
 const BASELINE_FONT_PX = 16; // set by the fixture's own stylesheet
-
-const CHROME_CANDIDATES = [
-  process.env.CHROME_PATH,
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/usr/bin/google-chrome',
-  '/usr/bin/google-chrome-stable',
-  '/usr/bin/chromium-browser',
-  '/usr/bin/chromium',
-].filter(Boolean);
-
-const results = [];
-function check(name, ok, detail) {
-  results.push({ name, ok, detail });
-  console.log(`${ok ? 'PASS' : 'FAIL'}: ${name}${!ok && detail ? ` - ${detail}` : ''}`);
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// Poll sync storage until `ready` holds, or give up and hand back the last
-// value read so the check that follows prints what it actually saw. The popup
-// writes storage asynchronously after a click returns, so a read at a fixed
-// delay races those writes.
-async function waitForStorage(readStorage, keys, ready, timeoutMs = 15000) {
-  const deadline = Date.now() + timeoutMs;
-  let last;
-  do {
-    last = await readStorage(keys);
-    if (ready(last)) return last;
-    await sleep(100);
-  } while (Date.now() < deadline);
-  return last;
-}
-
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript' };
-
-function startServer() {
-  const server = http.createServer((req, res) => {
-    const name = path.basename(req.url.split('?')[0]) || 'page.html';
-    try {
-      const body = fs.readFileSync(path.join(FIXTURE_DIR, name));
-      res.writeHead(200, { 'Content-Type': MIME[path.extname(name)] || 'application/octet-stream' });
-      res.end(body);
-    } catch {
-      res.writeHead(404);
-      res.end('Not found');
-    }
-  });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
-}
 
 // What the fixture page looks like right now, in the units a person would
 // notice, plus the extension's own stylesheets on the page.
@@ -147,48 +101,14 @@ function ask(driver, message) {
 }
 
 async function main() {
-  const chrome = CHROME_CANDIDATES.find((p) => fs.existsSync(p));
-  if (!chrome) {
-    console.error('No Chrome found. Set CHROME_PATH, or install Google Chrome.');
-    console.error(`Looked in:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
-    process.exit(1);
-  }
-
-  const server = await startServer();
+  const chrome = findChrome();
+  const server = await startFixtureServer(FIXTURE_DIR);
   const fixtureUrl = `http://127.0.0.1:${server.address().port}/page.html`;
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aa-pe-journey-'));
 
-  const browser = await puppeteer.launch({
-    executablePath: chrome,
-    headless: true,
-    userDataDir,
-    // Puppeteer turns extensions off by default, which would make every
-    // assertion below pass for the wrong reason.
-    ignoreDefaultArgs: ['--disable-extensions'],
-    args: [
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--enable-unsafe-extension-debugging',
-      // The popup and driver tabs stay in the background for the whole
-      // journey. Without these their renderers are throttled and the clicks
-      // below stall.
-      '--disable-renderer-backgrounding',
-      '--disable-backgrounding-occluded-windows',
-    ],
-  });
+  const session = await launchWithExtension({ chrome, extPath: EXT_PATH, profilePrefix: 'aa-pe-journey-' });
+  const { browser, extId, worker, readStorage } = session;
 
   try {
-    const cdp = await browser.target().createCDPSession();
-    const { id: extId } = await cdp.send('Extensions.loadUnpacked', { path: EXT_PATH });
-    const swTarget = await browser.waitForTarget(
-      (t) => t.type() === 'service_worker' && t.url().includes(extId),
-      { timeout: 20000 }
-    );
-    const worker = await swTarget.worker();
-    console.log(`extension loaded: ${extId}\n`);
-
-    const readStorage = (keys) =>
-      worker.evaluate((k) => new Promise((r) => chrome.storage.sync.get(k, r)), keys);
 
     // An extension page to send background messages from. Service-worker code
     // cannot message itself, and onboarding sends these from a page.
@@ -434,18 +354,11 @@ async function main() {
       JSON.stringify(profileAfterWithdrawal?.profile)
     );
   } finally {
-    await browser.close().catch(() => {});
+    await session.close();
     server.close();
-    fs.rmSync(userDataDir, { recursive: true, force: true });
   }
 
-  const failed = results.filter((r) => !r.ok);
-  console.log(`\n${results.length - failed.length}/${results.length} passed`);
-  if (failed.length) {
-    console.log('Failed:');
-    for (const f of failed) console.log(`  - ${f.name}${f.detail ? `: ${f.detail}` : ''}`);
-  }
-  process.exitCode = failed.length ? 1 : 0;
+  process.exitCode = finish() ? 1 : 0;
 }
 
 main().catch((e) => {

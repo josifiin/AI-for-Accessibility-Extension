@@ -15,48 +15,17 @@
 //
 // Needs a local Chrome, so CI skips it.
 
-const fs = require('fs');
-const http = require('http');
-const os = require('os');
+// Chrome discovery, the fixture server, and the extension launch are shared
+// with the other journeys in scripts/e2e-chrome.js.
 const path = require('path');
-const puppeteer = require('puppeteer-core');
+const {
+  findChrome, startFixtureServer, launchWithExtension, makeChecks, sleep, waitFor,
+} = require('../../scripts/e2e-chrome.js');
+
+const { check, finish } = makeChecks();
 
 const EXT_PATH = path.resolve(__dirname, '..', 'extension');
 const FIXTURE_DIR = path.join(__dirname, 'fixtures', 'show-captions');
-
-const CHROME_CANDIDATES = [
-  process.env.CHROME_PATH,
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/usr/bin/google-chrome',
-  '/usr/bin/google-chrome-stable',
-  '/usr/bin/chromium-browser',
-  '/usr/bin/chromium',
-].filter(Boolean);
-
-const results = [];
-function check(name, ok, detail) {
-  results.push({ name, ok, detail });
-  console.log(`${ok ? 'PASS' : 'FAIL'}: ${name}${!ok && detail ? ` - ${detail}` : ''}`);
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-const MIME = { '.html': 'text/html; charset=utf-8', '.vtt': 'text/vtt' };
-
-function startServer() {
-  const server = http.createServer((req, res) => {
-    const name = path.basename(req.url.split('?')[0]) || 'page.html';
-    try {
-      const body = fs.readFileSync(path.join(FIXTURE_DIR, name));
-      res.writeHead(200, { 'Content-Type': MIME[path.extname(name)] || 'application/octet-stream' });
-      res.end(body);
-    } catch {
-      res.writeHead(404);
-      res.end('Not found');
-    }
-  });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
-}
 
 // The mode of the fixture's only caption track, plus the adapter's own marker
 // on the video, read from the page itself.
@@ -68,54 +37,19 @@ function readTrack(page) {
   });
 }
 
-// Poll the page until `ready` holds or the time runs out, handing back the last
-// reading so a failed check prints what it saw. The content script applies
-// stored settings after load, so a read at a fixed delay would race it.
-async function waitForTrack(page, ready, timeoutMs = 15000) {
-  const deadline = Date.now() + timeoutMs;
-  let last;
-  do {
-    last = await readTrack(page);
-    if (ready(last)) return last;
-    await sleep(100);
-  } while (Date.now() < deadline);
-  return last;
-}
+// Poll the page until `ready` holds, since the content script applies stored
+// settings after load.
+const waitForTrack = (page, ready) => waitFor(() => readTrack(page), ready);
 
 async function main() {
-  const chrome = CHROME_CANDIDATES.find((p) => fs.existsSync(p));
-  if (!chrome) {
-    console.error('No Chrome found. Set CHROME_PATH, or install Google Chrome.');
-    process.exit(1);
-  }
-
-  const server = await startServer();
+  const chrome = findChrome();
+  const server = await startFixtureServer(FIXTURE_DIR);
   const fixtureUrl = `http://127.0.0.1:${server.address().port}/page.html`;
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aa-pe-captions-'));
 
-  const browser = await puppeteer.launch({
-    executablePath: chrome,
-    headless: true,
-    userDataDir,
-    ignoreDefaultArgs: ['--disable-extensions'],
-    args: [
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--enable-unsafe-extension-debugging',
-      '--disable-renderer-backgrounding',
-      '--disable-backgrounding-occluded-windows',
-    ],
-  });
+  const session = await launchWithExtension({ chrome, extPath: EXT_PATH, profilePrefix: 'aa-pe-captions-' });
+  const { browser, worker } = session;
 
   try {
-    const cdp = await browser.target().createCDPSession();
-    const { id: extId } = await cdp.send('Extensions.loadUnpacked', { path: EXT_PATH });
-    const swTarget = await browser.waitForTarget(
-      (t) => t.type() === 'service_worker' && t.url().includes(extId),
-      { timeout: 20000 }
-    );
-    const worker = await swTarget.worker();
-    console.log(`extension loaded: ${extId}\n`);
 
     const setStorage = (obj) =>
       worker.evaluate((o) => new Promise((r) => chrome.storage.sync.set(o, r)), obj);
@@ -176,14 +110,11 @@ async function main() {
     check('with showCaptions false, the track stays disabled after a reload', withdrawn.mode === 'disabled', JSON.stringify(withdrawn));
     check('and the video carries no marker', withdrawn.marked === null, JSON.stringify(withdrawn));
   } finally {
-    await browser.close().catch(() => {});
+    await session.close();
     server.close();
-    fs.rmSync(userDataDir, { recursive: true, force: true });
   }
 
-  const failed = results.filter((r) => !r.ok).length;
-  console.log(`\n${results.length - failed}/${results.length} passed`);
-  process.exit(failed ? 1 : 0);
+  process.exit(finish() ? 1 : 0);
 }
 
 main().catch((e) => {
