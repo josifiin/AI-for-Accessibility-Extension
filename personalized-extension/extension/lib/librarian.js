@@ -897,7 +897,7 @@ Rules:
       //   url/contexts — what to compute the returned `restored` view for.
       // @returns {{forgotten: Array<{scope,key,value}>, scopes: string[], restored: object}}
       async resetToProfile(opts = {}) {
-        const only = opts.scope && VALID_SCOPE.test(opts.scope) ? opts.scope : null;
+        const only = opts.scope ? VALID_SCOPE.test(opts.scope) ? opts.scope : "general" : null;
         const shards = only ? { [only]: await DS().getMemoryShard(only) } : await DS().allMemoryShards();
         const forgotten = [];
         const touched = [];

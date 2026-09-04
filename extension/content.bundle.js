@@ -1870,12 +1870,13 @@ ${chunk}
     return true;
   }
   var HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+  var NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
   var FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
   var COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
   var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
   function ensureBanner() {
     if (document.querySelector('header, [role="banner"]')) return false;
-    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => {
+    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => {
       var _a;
       return (((_a = e.textContent) == null ? void 0 : _a.trim().length) || 0) < 2e3;
     })[0];

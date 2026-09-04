@@ -1,6 +1,6 @@
 {
   "repo": "https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit",
-  "commit": "a1737604977d981a7cebe8d953290931138a0cef",
+  "commit": "00bb94bd235b781a4f39c34b4d9910725dd78a38",
   "note": "Rebuild these tarballs with: node scripts/update-vendor.mjs --commit <sha>",
   "node": "v26.5.0",
   "npm": "11.17.0"
