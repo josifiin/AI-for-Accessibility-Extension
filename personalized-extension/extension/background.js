@@ -635,7 +635,7 @@ const OBSERVED_SETTING_KEYS = new Set([
   'hideDistractions', 'showProgress', 'colorBlindMode', 'fontScale', 'lineHeight',
   'letterSpacing', 'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus',
   'readingGuide', 'speechRate', 'autoWcagFix', 'autoDescribe', 'autoSimplify',
-  'autoSummarize', 'autoFixLabels', 'autoCaptions', 'fixContrast',
+  'autoSummarize', 'autoFixLabels', 'autoCaptions', 'fixContrast', 'showCaptions',
 ]);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync' || !globalThis.Librarian) return;

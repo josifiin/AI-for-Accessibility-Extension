@@ -36,6 +36,7 @@ import { ExploreAChart } from '../../skills/builtin/explore-a-chart.js';
 import { SpaFocus } from '../../skills/builtin/spa-focus.js';
 import { SkipLinks } from '../../skills/builtin/skip-links.js';
 import { MathA11y } from '../../skills/builtin/math-a11y.js';
+import { ShowCaptions } from '../../skills/builtin/show-captions.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -87,6 +88,7 @@ const TOOL_MAP = {
   SpaFocus,
   SkipLinks,
   MathA11y,
+  ShowCaptions,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -378,7 +380,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'agentWatch', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'agentWatch', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible', 'showCaptions',
       'fixContrast', 'autoWcagFix', 'wcagRiskyFixes', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -420,6 +422,10 @@ async function initFromStorage() {
     if (settings.spaFocus) enableTool('SpaFocus');
     if (settings.skipLinks) enableTool('SkipLinks');
     if (settings.mathAccessible) enableTool('MathA11y');
+    // The Show Captions quick-start card writes this key. It switches on the
+    // captions a video already carries, so it needs no model or key and works
+    // before anything AI-backed does.
+    if (settings.showCaptions) enableTool('ShowCaptions');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -635,7 +641,8 @@ async function applyProfileSettings(settings) {
     bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline', agentWatch: 'AgentWatch',
     bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage',
     muteSounds: 'MuteSounds', defineWords: 'DefineWords', stopAutoAdvance: 'StopAutoAdvance',
-    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions', rememberSpot: 'ReadingSpot', expandAbbreviations: 'AbbreviationExpand', languageTag: 'LanguageTag', exploreChart: 'ExploreAChart', spaFocus: 'SpaFocus', skipLinks: 'SkipLinks', mathAccessible: 'MathA11y'
+    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions', rememberSpot: 'ReadingSpot', expandAbbreviations: 'AbbreviationExpand', languageTag: 'LanguageTag', exploreChart: 'ExploreAChart', spaFocus: 'SpaFocus', skipLinks: 'SkipLinks', mathAccessible: 'MathA11y',
+    showCaptions: 'ShowCaptions'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {

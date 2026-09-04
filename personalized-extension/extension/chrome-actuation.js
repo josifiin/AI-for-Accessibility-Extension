@@ -53,6 +53,7 @@
   const SIMPLE_TOOLS = {
     darkMode: 'DarkMode', readerMode: 'ReaderMode', keyboardNav: 'KeyboardNavigator',
     voiceCommands: 'VoiceCommands', motionReducer: 'MotionReducer',
+    showCaptions: 'ShowCaptions',
   };
   const VA_KEYS = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];

@@ -444,7 +444,7 @@ server.listen(PORT, async () => {
   //     than a gap:
   //       - The registry is the whole project's tool catalog now that it
   //         lives in the toolkit package, so it also lists adapters that only
-  //         the extension/ surface ships (show-captions, fix-landmarks).
+  //         the extension/ surface ships (fix-landmarks).
   //         An entry with no builtin of the same name under skills/builtin/
   //         belongs to that other surface, and content.js is the wrong file
   //         to look in. The exempt set is written down in OTHER_SURFACE and
@@ -457,7 +457,7 @@ server.listen(PORT, async () => {
   //         there is no stored toggle to read at page load even though the
   //         registry declares a readAloud setting for other surfaces.
   const IMPERATIVE_ONLY = new Set(['read-aloud']);
-  const OTHER_SURFACE = new Set(['show-captions', 'fix-landmarks']);
+  const OTHER_SURFACE = new Set(['fix-landmarks']);
   {
     const entries = extractRegistryEntries(registryContent);
     for (const entry of entries) {
