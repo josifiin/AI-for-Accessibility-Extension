@@ -13,7 +13,7 @@
 //
 // Chrome comes from CHROME_PATH or the usual install locations, and the
 // extension is loaded over the DevTools Protocol rather than with
-// --load-extension, which Chrome no longer honours. This is the same approach
+// --load-extension, which Chrome no longer honors. This is the same approach
 // scripts/check-extensions-load-in-chrome.mjs takes.
 //
 //   CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
@@ -36,10 +36,7 @@ const FIXTURE_DIR = path.join(__dirname, 'fixtures', 'profile');
 // instead of leaving the journey asserting a stale number.
 const PROFILE_ID = 'lowVision';
 const PRESET = JSON.parse(
-  fs.readFileSync(
-    path.join(REPO_ROOT, 'node_modules', '@ai4a11y', 'tools', 'profiles', 'settings.json'),
-    'utf8'
-  )
+  fs.readFileSync(require.resolve('@ai4a11y/tools/profiles/settings.json'), 'utf8')
 ).profiles[PROFILE_ID].tools;
 
 const BASELINE_FONT_PX = 16; // set by the fixture's own stylesheet
@@ -61,6 +58,21 @@ function check(name, ok, detail) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Poll sync storage until `ready` holds, or give up and hand back the last
+// value read so the check that follows prints what it actually saw. The popup
+// writes storage asynchronously after a click returns, so a read at a fixed
+// delay races those writes.
+async function waitForStorage(readStorage, keys, ready, timeoutMs = 15000) {
+  const deadline = Date.now() + timeoutMs;
+  let last;
+  do {
+    last = await readStorage(keys);
+    if (ready(last)) return last;
+    await sleep(100);
+  } while (Date.now() < deadline);
+  return last;
+}
 
 // Tick or untick the profile's checkbox. The popup sits in a background tab
 // throughout, so this calls click() on the element directly rather than
@@ -177,14 +189,17 @@ async function main() {
 
     // The content script runs at document_idle and answers messages once it is
     // listening. Waiting for that answer is what makes the rest deterministic.
-    const contentScriptReady = await popup
-      .evaluate(
+    // A tab whose URL the extension cannot see (no host access, or a page still
+    // navigating) is retried rather than dereferenced, so a slow start ends in
+    // a FAIL line instead of a promise that never settles.
+    const waitForContentScript = () =>
+      popup.evaluate(
         () =>
           new Promise((resolve) => {
             const deadline = Date.now() + 20000;
             const attempt = () => {
               chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-                if (!tab || tab.url.startsWith('chrome-extension://')) {
+                if (!tab || !tab.url || tab.url.startsWith('chrome-extension://')) {
                   return Date.now() < deadline ? setTimeout(attempt, 250) : resolve(false);
                 }
                 chrome.tabs.sendMessage(tab.id, { type: 'getToolStates' }, (resp) => {
@@ -197,6 +212,7 @@ async function main() {
             attempt();
           })
       );
+    const contentScriptReady = await waitForContentScript();
     check('content script is listening on the fixture page', contentScriptReady === true);
 
     // ---- Step 1: baseline -------------------------------------------------
@@ -214,9 +230,11 @@ async function main() {
 
     // ---- Step 2: choose the profile in the popup --------------------------
     await tickProfile(popup);
-    await sleep(500);
-
-    const afterChoice = await readStorage(['selectedProfiles', 'fontScale', 'letterSpacing', 'lineHeight']);
+    const afterChoice = await waitForStorage(
+      readStorage,
+      ['selectedProfiles', 'fontScale', 'letterSpacing', 'lineHeight'],
+      (s) => Array.isArray(s.selectedProfiles) && s.selectedProfiles.includes(PROFILE_ID) && s.fontScale === PRESET.fontScale
+    );
     check(
       `choosing ${PROFILE_ID} records it in sync storage`,
       Array.isArray(afterChoice.selectedProfiles) &&
@@ -280,9 +298,11 @@ async function main() {
 
     // ---- Step 5: withdraw the profile -------------------------------------
     await tickProfile(popup);
-    await sleep(500);
-
-    const afterWithdrawal = await readStorage(['selectedProfiles', 'fontScale', 'letterSpacing', 'lineHeight']);
+    const afterWithdrawal = await waitForStorage(
+      readStorage,
+      ['selectedProfiles', 'fontScale', 'letterSpacing', 'lineHeight'],
+      (s) => Array.isArray(s.selectedProfiles) && s.selectedProfiles.length === 0 && s.fontScale !== PRESET.fontScale
+    );
     check(
       'unticking the profile empties selectedProfiles',
       Array.isArray(afterWithdrawal.selectedProfiles) && afterWithdrawal.selectedProfiles.length === 0,
@@ -313,7 +333,11 @@ async function main() {
     // ---- Step 6: reload once more, and the withdrawal holds ----------------
     // Withdrawal that only survives until the next page load is not
     // withdrawal, so this is asserted separately from step 5.
+    // This is a negative check (nothing should change), so there is no style
+    // to wait for. Wait for the content script to be listening again, then
+    // give it the same settling time a person would before reading the page.
     await fixture.reload({ waitUntil: 'load' });
+    check('content script is listening again after the final reload', (await waitForContentScript()) === true);
     await sleep(3000);
     const afterFinalReload = await readPage(fixture);
     check(

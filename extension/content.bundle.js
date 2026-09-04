@@ -7817,6 +7817,7 @@ ${scope} table {
       AutoTranscriber.enable();
       console.log("[AI4A11y] Auto transcriber enabled");
     }
+    if (settings2.showCaptions) ShowCaptions.enable();
   }
   async function init() {
     if (initPromise) {
@@ -7997,6 +7998,7 @@ ${scope} table {
     VoiceCommands.disable();
     KeyboardNavigator.disable();
     AutoTranscriber.disable();
+    ShowCaptions.disable();
     DismissOverlays.disable();
     BigTargets.disable();
     LinkHighlighter.disable();
@@ -8227,6 +8229,10 @@ ${scope} table {
       case "AutoTranscriber":
         AutoTranscriber.enable();
         break;
+      case "showCaptions":
+      case "ShowCaptions":
+        ShowCaptions.enable();
+        break;
       default:
         console.log("[AI4A11y] Unknown tool:", tool);
     }
@@ -8280,6 +8286,10 @@ ${scope} table {
       case "autoCaptions":
       case "AutoTranscriber":
         AutoTranscriber.disable();
+        break;
+      case "showCaptions":
+      case "ShowCaptions":
+        ShowCaptions.disable();
         break;
     }
   }
