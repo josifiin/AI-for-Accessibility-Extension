@@ -444,7 +444,7 @@ server.listen(PORT, async () => {
   //     than a gap:
   //       - The registry is the whole project's tool catalog now that it
   //         lives in the toolkit package, so it also lists adapters that only
-  //         the extension/ surface ships (show-captions, fix-landmarks).
+  //         the extension/ surface ships (fix-landmarks).
   //         An entry with no builtin of the same name under skills/builtin/
   //         belongs to that other surface, and content.js is the wrong file
   //         to look in. The exempt set is written down in OTHER_SURFACE and
@@ -457,7 +457,7 @@ server.listen(PORT, async () => {
   //         there is no stored toggle to read at page load even though the
   //         registry declares a readAloud setting for other surfaces.
   const IMPERATIVE_ONLY = new Set(['read-aloud']);
-  const OTHER_SURFACE = new Set(['show-captions', 'fix-landmarks']);
+  const OTHER_SURFACE = new Set(['fix-landmarks']);
   {
     const entries = extractRegistryEntries(registryContent);
     for (const entry of entries) {
@@ -1694,6 +1694,34 @@ server.listen(PORT, async () => {
       console.log(`PASS (#24): AI_TOOL_MAP parsed — ${aiToolMapKeys.size} keys: ${[...aiToolMapKeys].join(', ')}`);
     } else {
       console.log('FAIL (#24): could not parse AI_TOOL_MAP from content.js');
+    }
+
+    // The actuation port keeps two hand-written tables for the same settings:
+    // SIMPLE_TOOLS (which content tool a stored toggle live-applies) and
+    // SETTING_DEFAULTS (the baseline it reports against and restores on undo).
+    // A key in one but not the other is applied yet never reported, or
+    // reported yet never applied. Every SIMPLE_TOOLS value must also be a
+    // real TOOL_MAP key, or the enable message goes nowhere.
+    {
+      const simpleTools = extractMapKeys(chromeActuationCode, 'SIMPLE_TOOLS');
+      const settingDefaults = extractMapKeys(chromeActuationCode, 'SETTING_DEFAULTS');
+      const simpleToolTargets = [...chromeActuationCode.match(/const\s+SIMPLE_TOOLS\s*=\s*\{([^}]+)\}/s)[1].matchAll(/:\s*'(\w+)'/g)].map((m) => m[1]);
+      if (simpleTools.size === 0 || settingDefaults.size === 0) {
+        console.log('FAIL (#24): could not parse SIMPLE_TOOLS / SETTING_DEFAULTS from chrome-actuation.js');
+      } else {
+        const missingDefault = [...simpleTools].filter((k) => !settingDefaults.has(k));
+        if (missingDefault.length === 0) {
+          console.log(`PASS (#24): every SIMPLE_TOOLS key has a SETTING_DEFAULTS baseline (${simpleTools.size} keys)`);
+        } else {
+          console.log(`FAIL (#24): SIMPLE_TOOLS keys without a SETTING_DEFAULTS baseline: ${missingDefault.join(', ')}`);
+        }
+        const missingTool = simpleToolTargets.filter((t) => !toolMapKeys.has(t));
+        if (missingTool.length === 0) {
+          console.log(`PASS (#24): every SIMPLE_TOOLS target is a content.js TOOL_MAP key`);
+        } else {
+          console.log(`FAIL (#24): SIMPLE_TOOLS targets missing from TOOL_MAP: ${missingTool.join(', ')}`);
+        }
+      }
     }
 
     // Assert every expected demand-tier key is a real map key (not just a substring).

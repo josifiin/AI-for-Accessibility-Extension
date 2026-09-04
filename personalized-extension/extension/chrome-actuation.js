@@ -43,6 +43,7 @@
     readingGuide: false, speechRate: 1,
     fixContrast: false, autoWcagFix: false, autoDescribe: false, autoFixLabels: false,
     autoCaptions: false, autoSimplify: false, autoSummarize: false,
+    showCaptions: false,
   };
 
   // Live-apply grouping — must mirror how the popup drives the content script
@@ -53,6 +54,7 @@
   const SIMPLE_TOOLS = {
     darkMode: 'DarkMode', readerMode: 'ReaderMode', keyboardNav: 'KeyboardNavigator',
     voiceCommands: 'VoiceCommands', motionReducer: 'MotionReducer',
+    showCaptions: 'ShowCaptions',
   };
   const VA_KEYS = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];

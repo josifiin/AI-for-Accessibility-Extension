@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Show Captions fixture</title>
+</head>
+<body>
+  <h1>A video with its own caption track</h1>
+  <p id="sample">The track below is off until something switches it on.</p>
+  <!-- No default attribute: the track starts in the "disabled" mode, which is
+       what a real page without captions showing looks like. -->
+  <video id="clip" controls width="320" height="180">
+    <track kind="captions" srclang="en" label="English" src="captions.vtt">
+  </video>
+</body>
+</html>
