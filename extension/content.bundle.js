@@ -149,6 +149,8 @@
         name: "Deaf/HoH",
         description: "Auto captions for media, visual focus for non-audio navigation",
         tools: {
+          showCaptions: true,
+          liveCaptions: true,
           autoCaptions: true,
           enhanceFocus: true,
           autoDescribe: false,
@@ -1868,12 +1870,13 @@ ${chunk}
     return true;
   }
   var HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+  var NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
   var FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
   var COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
   var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
   function ensureBanner() {
     if (document.querySelector('header, [role="banner"]')) return false;
-    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => {
+    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => {
       var _a;
       return (((_a = e.textContent) == null ? void 0 : _a.trim().length) || 0) < 2e3;
     })[0];
@@ -3953,6 +3956,117 @@ ${chunk}
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yAutoTranscriber = AutoTranscriber;
+
+  // node_modules/@ai4a11y/tools/adapters/show-captions.js
+  var logFix10 = globalThis.ai4a11yLogFix || (() => {
+  });
+  function preferredLang() {
+    const l = typeof navigator !== "undefined" && navigator.language || "en";
+    return String(l).slice(0, 2).toLowerCase();
+  }
+  var PLAYERS = [
+    {
+      name: "youtube",
+      button: () => document.querySelector(".ytp-subtitles-button"),
+      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
+    },
+    {
+      name: "vimeo",
+      button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]'),
+      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
+    }
+  ];
+  var DATA = "ai4a11yCaptions";
+  var ShowCaptions = {
+    enabled: false,
+    _restore: [],
+    // [{ track, prevMode }] for native tracks we switched on
+    _clicked: null,
+    // Set of "player|url" we've already turned on (once per URL)
+    _unregister: null,
+    // Enable the best caption/subtitle track on each <video> that has one, once.
+    _enableNativeTracks() {
+      const lang = preferredLang();
+      for (const v of document.querySelectorAll("video")) {
+        if (v.dataset[DATA]) continue;
+        const list = v.textTracks ? [...v.textTracks] : [];
+        const tracks = list.filter((t) => t && (t.kind === "captions" || t.kind === "subtitles"));
+        if (!tracks.length) continue;
+        const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
+        this._restore.push({ track: want, prevMode: want.mode });
+        try {
+          want.mode = "showing";
+        } catch {
+        }
+        v.dataset[DATA] = "on";
+        logFix10("showCaptions", v, "(off)", "showing");
+      }
+    },
+    // Turn on captions for players that own their CC UI — at most once per URL, so
+    // the user turning them back off isn't overridden by the next mutation.
+    _enablePlayerCaptions() {
+      const url = typeof location !== "undefined" ? location.href : "";
+      for (const p of PLAYERS) {
+        let btn;
+        try {
+          btn = p.button();
+        } catch {
+          btn = null;
+        }
+        if (!btn) continue;
+        const key = p.name + "|" + url;
+        if (this._clicked.has(key)) continue;
+        this._clicked.add(key);
+        if (!p.isOn(btn)) {
+          try {
+            btn.click();
+          } catch {
+          }
+          logFix10("showCaptions", btn, "(off)", "on");
+        }
+      }
+    },
+    _sweep() {
+      if (!this.enabled) return;
+      this._enableNativeTracks();
+      this._enablePlayerCaptions();
+    },
+    enable() {
+      if (this.enabled) {
+        this._sweep();
+        return;
+      }
+      this.enabled = true;
+      this._restore = [];
+      this._clicked = /* @__PURE__ */ new Set();
+      this._sweep();
+      this._unregister = registerSweep("show-captions", () => this._sweep(), { debounceMs: 400 });
+      console.log("[AI4A11y] Show Captions enabled");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this._unregister) {
+        this._unregister();
+        this._unregister = null;
+      }
+      for (const { track, prevMode } of this._restore) {
+        try {
+          track.mode = prevMode;
+        } catch {
+        }
+      }
+      this._restore = [];
+      for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) delete v.dataset[DATA];
+      this._clicked = null;
+      console.log("[AI4A11y] Show Captions disabled");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yShowCaptions = ShowCaptions;
 
   // node_modules/@ai4a11y/tools/adapters/dismiss-overlays.js
   var OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
@@ -6405,7 +6519,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yReadingSpot = ReadingSpot;
 
   // node_modules/@ai4a11y/tools/adapters/abbreviation-expand.js
-  var logFix10 = globalThis.ai4a11yLogFix || (() => {
+  var logFix11 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_TEXT_NODES2 = 2e3;
   var STYLE_ID2 = "ai4a11y-abbr-styles";
@@ -6512,7 +6626,7 @@ ${scope} table {
           if (typeof expansion !== "string" || !expansion) continue;
           abbr.setAttribute("title", expansion);
           this.titled.push(abbr);
-          logFix10("abbr-title", abbr, "(none)", expansion);
+          logFix11("abbr-title", abbr, "(none)", expansion);
         } catch {
         }
       }
@@ -6542,7 +6656,7 @@ ${scope} table {
         abbr.setAttribute("title", dict[m[0]]);
         abbr.textContent = m[0];
         wrap.appendChild(abbr);
-        logFix10("abbr-expand", abbr, m[0], dict[m[0]]);
+        logFix11("abbr-expand", abbr, m[0], dict[m[0]]);
         last = end;
       }
       if (!wrap) return null;
@@ -6580,7 +6694,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yAbbreviationExpand = AbbreviationExpand;
 
   // node_modules/@ai4a11y/tools/adapters/language-tag.js
-  var logFix11 = globalThis.ai4a11yLogFix || (() => {
+  var logFix12 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_TEXT_NODES3 = 2e3;
   var SAMPLE_CHAR_BUDGET = 4e3;
@@ -6673,7 +6787,7 @@ ${scope} table {
       if (html && !html.hasAttribute("lang")) {
         html.setAttribute("lang", this.mainLang);
         this.htmlLangAdded = true;
-        logFix11("lang", html, "(none)", this.mainLang);
+        logFix12("lang", html, "(none)", this.mainLang);
       }
       const count = this.sweepRoot(root);
       console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
@@ -6695,7 +6809,7 @@ ${scope} table {
       this.handles.push(handle);
       if (handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES3} text nodes`);
       for (const { replacement } of handle.records) {
-        logFix11("language-tag", replacement, "(untagged)", `lang spans (${reason})`);
+        logFix12("language-tag", replacement, "(untagged)", `lang spans (${reason})`);
       }
       return handle.records.length;
     },
@@ -6764,7 +6878,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yLanguageTag = LanguageTag;
 
   // node_modules/@ai4a11y/tools/adapters/explore-a-chart.js
-  var logFix12 = globalThis.ai4a11yLogFix || (() => {
+  var logFix13 = globalThis.ai4a11yLogFix || (() => {
   });
   var CHART_HINT = /chart|graph|plot|diagram/i;
   var HTML_NS2 = "http://www.w3.org/1999/xhtml";
@@ -6883,7 +6997,7 @@ ${scope} table {
       });
       chart.insertAdjacentElement("afterend", btn);
       this.buttons.push(btn);
-      logFix12("chart-button", chart, "(none)", "View data table button");
+      logFix13("chart-button", chart, "(none)", "View data table button");
     },
     target() {
       return this.chartFor(document.activeElement) || this.chartFor(this.lastHover);
@@ -7057,7 +7171,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yExploreAChart = ExploreAChart;
 
   // node_modules/@ai4a11y/tools/adapters/spa-focus.js
-  var logFix13 = globalThis.ai4a11yLogFix || (() => {
+  var logFix14 = globalThis.ai4a11yLogFix || (() => {
   });
   var REGION_ID2 = "ai4a11y-spa-focus-region";
   var SETTLE_DELAY_MS = 150;
@@ -7128,7 +7242,7 @@ ${scope} table {
         if (!target.hasAttribute("tabindex")) {
           target.setAttribute("tabindex", "-1");
           this.tabindexAdded.add(target);
-          logFix13("spa-focus-tabindex", target, "(none)", "-1");
+          logFix14("spa-focus-tabindex", target, "(none)", "-1");
         }
         target.focus({ preventScroll: false });
       }
@@ -7185,7 +7299,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11ySpaFocus = SpaFocus;
 
   // node_modules/@ai4a11y/tools/adapters/skip-links.js
-  var logFix14 = globalThis.ai4a11yLogFix || (() => {
+  var logFix15 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAIN_SELECTOR = 'main, [role="main"], #main, #content, .content';
   var NAV_SELECTOR = 'nav, [role="navigation"]';
@@ -7207,7 +7321,7 @@ ${scope} table {
       for (let n = 2; document.getElementById(id); n++) id = `${base}-${n}`;
       el.id = id;
       this.addedIdTargets.push(el);
-      logFix14("skip-link-id", el, "(none)", id);
+      logFix15("skip-link-id", el, "(none)", id);
       return id;
     },
     // A real <a href="#…"> so the link works even with no JS; the click handler
@@ -7222,7 +7336,7 @@ ${scope} table {
         if (!target.hasAttribute("tabindex")) {
           target.setAttribute("tabindex", "-1");
           this.addedTabindexTargets.push(target);
-          logFix14("skip-link-tabindex", target, "(none)", "-1");
+          logFix15("skip-link-tabindex", target, "(none)", "-1");
         }
         try {
           target.focus();
@@ -7275,7 +7389,7 @@ ${scope} table {
         const parent = document.body || document.documentElement;
         parent.insertBefore(container, parent.firstChild);
         this.container = container;
-        logFix14("skip-links", container, "(none)", `${container.querySelectorAll("a").length} links injected`);
+        logFix15("skip-links", container, "(none)", `${container.querySelectorAll("a").length} links injected`);
       }
       console.log("[AI4A11y] Skip Links enabled");
       announce(main || nav ? "Skip links added at the top of the page" : "No main content or navigation region found to skip to");
@@ -7316,7 +7430,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
 
   // node_modules/@ai4a11y/tools/adapters/math-a11y.js
-  var logFix15 = globalThis.ai4a11yLogFix || (() => {
+  var logFix16 = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_ELEMENTS = 100;
   var MATH_HINT_RE = /math|equation|latex|tex|formula/i;
@@ -7410,7 +7524,7 @@ ${scope} table {
       const old = el.hasAttribute(name) ? el.getAttribute(name) : null;
       attrs.push({ name, old });
       el.setAttribute(name, value);
-      logFix15("math-a11y", el, old === null ? "(none)" : old, value);
+      logFix16("math-a11y", el, old === null ? "(none)" : old, value);
     },
     enable(options = {}) {
       if (this.enabled) return;
@@ -7521,7 +7635,7 @@ ${scope} table {
     captions: 0
   };
   var fixLog = [];
-  function logFix16(type, element, oldValue, newValue) {
+  function logFix17(type, element, oldValue, newValue) {
     var _a;
     const selector = ((_a = element == null ? void 0 : element.tagName) == null ? void 0 : _a.toLowerCase()) || "element";
     const id = (element == null ? void 0 : element.id) ? `#${element.id}` : "";
@@ -7629,7 +7743,7 @@ ${scope} table {
     inferColumnHeader: (sampleData) => sendMessage({ type: "inferColumnHeader", sampleData }).then(unwrap),
     announce: (msg) => announce2(msg)
   });
-  globalThis.ai4a11yLogFix = logFix16;
+  globalThis.ai4a11yLogFix = logFix17;
   globalThis.ai4a11yIncrementStat = incrementStat10;
   var isRunning = false;
   var initPromise = null;
@@ -7704,6 +7818,7 @@ ${scope} table {
       AutoTranscriber.enable();
       console.log("[AI4A11y] Auto transcriber enabled");
     }
+    if (settings2.showCaptions) ShowCaptions.enable();
   }
   async function init() {
     if (initPromise) {
@@ -7884,6 +7999,7 @@ ${scope} table {
     VoiceCommands.disable();
     KeyboardNavigator.disable();
     AutoTranscriber.disable();
+    ShowCaptions.disable();
     DismissOverlays.disable();
     BigTargets.disable();
     LinkHighlighter.disable();
@@ -8114,6 +8230,10 @@ ${scope} table {
       case "AutoTranscriber":
         AutoTranscriber.enable();
         break;
+      case "showCaptions":
+      case "ShowCaptions":
+        ShowCaptions.enable();
+        break;
       default:
         console.log("[AI4A11y] Unknown tool:", tool);
     }
@@ -8167,6 +8287,10 @@ ${scope} table {
       case "autoCaptions":
       case "AutoTranscriber":
         AutoTranscriber.disable();
+        break;
+      case "showCaptions":
+      case "ShowCaptions":
+        ShowCaptions.disable();
         break;
     }
   }

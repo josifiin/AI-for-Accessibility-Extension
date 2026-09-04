@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Profile journey fixture</title>
+  <style>
+    /* Fixed baselines so the journey can assert exact numbers. The Low Vision
+       profile scales font size by 1.5 and sets letter spacing to 0.12em, so
+       16px becomes 24px and "normal" becomes 2.88px: the em resolves against
+       the paragraph's own scaled 24px, not the 16px baseline. */
+    body { margin: 2rem; background: #ffffff; color: #111111; }
+    h1 { font-size: 32px; }
+    p { font-size: 16px; line-height: 1.5; letter-spacing: normal; }
+  </style>
+</head>
+<body>
+  <h1>Profile journey fixture</h1>
+  <p id="sample">
+    A paragraph of ordinary body text. It is here so the journey can read one
+    element's computed style before a profile is chosen, after it is chosen,
+    and after it is withdrawn.
+  </p>
+  <p>
+    A second paragraph with <a href="#target" id="sample-link">a link</a> in it.
+  </p>
+  <button type="button" id="sample-button">A button</button>
+  <p id="target">The link target.</p>
+</body>
+</html>

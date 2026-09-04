@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { toolkitFile } = require('./toolkit-paths.js');
 
 // Track failures across the scattered `console.log('FAIL: ...')` call sites
 // so this suite can gate CI (it exits 0 unconditionally otherwise).
@@ -111,7 +112,7 @@ server.listen(PORT, async () => {
   // Retired: large-cursor, dyslexia-font (entries removed; settingsMeta keys kept).
   // Canonical registry moved into the toolkit (skills/registry.js is a
   // re-export shim) — static source checks read the canonical file.
-  const registryPath = path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js');
+  const registryPath = toolkitFile('registry', 'tools.js');
   const registryContent = fs.readFileSync(registryPath, 'utf8');
   for (const skill of expectedSkills) {
     if (registryContent.includes(`id: '${skill}'`)) {
@@ -328,7 +329,7 @@ server.listen(PORT, async () => {
   } else {
     console.log('FAIL: undo journal must be SW-owned and use removeScopedSetting');
   }
-  const librarianSrc = fs.readFileSync(path.join(ROOT, '..', 'toolkit/core/librarian.js'), 'utf8');
+  const librarianSrc = fs.readFileSync(toolkitFile('core', 'librarian.js'), 'utf8');
   if (librarianSrc.includes('removeScopedSetting') && librarianSrc.includes('hasScopedSetting')) {
     console.log('PASS: Librarian exposes the scoped-setting delete primitive');
   } else {
@@ -436,15 +437,46 @@ server.listen(PORT, async () => {
     if (sharedOk) console.log('PASS: no unexpected shared settings keys across registry entries');
   }
 
-  // (b) Every registry entry has at least one settings key with an enable
-  //     path in content.js source. Entries with empty settings ({}) are exempt
-  //     (read-aloud has no persistent toggle key — it is triggered imperatively).
+  // (b) Every registry entry this extension implements has at least one
+  //     settings key with an enable path in content.js source.
+  //
+  //     Two kinds of entry are exempt, and both are current behavior rather
+  //     than a gap:
+  //       - The registry is the whole project's tool catalog now that it
+  //         lives in the toolkit package, so it also lists adapters that only
+  //         the extension/ surface ships (show-captions, fix-landmarks).
+  //         An entry with no builtin of the same name under skills/builtin/
+  //         belongs to that other surface, and content.js is the wrong file
+  //         to look in. The exempt set is written down in OTHER_SURFACE and
+  //         the file probe has to agree with it in both directions, so a
+  //         renamed builtin or a new toolkit entry is a FAIL here rather than
+  //         a silent exemption.
+  //       - Entries with no settings keys at all, plus the ones listed in
+  //         IMPERATIVE_ONLY. read-aloud is started by the popup's Read button
+  //         (a speakPage message content.js answers by calling ReadAloud), so
+  //         there is no stored toggle to read at page load even though the
+  //         registry declares a readAloud setting for other surfaces.
+  const IMPERATIVE_ONLY = new Set(['read-aloud']);
+  const OTHER_SURFACE = new Set(['show-captions', 'fix-landmarks']);
   {
     const entries = extractRegistryEntries(registryContent);
     for (const entry of entries) {
       const keys = entry.settingsKeys;
-      if (keys.length === 0) {
-        console.log(`PASS: ${entry.id} has no settings keys (imperative trigger — exempt)`);
+      const hasBuiltin = fs.existsSync(path.join(ROOT, 'skills/builtin', `${entry.id}.js`));
+      if (!hasBuiltin && OTHER_SURFACE.has(entry.id)) {
+        console.log(`PASS: ${entry.id} is another surface's adapter, not this extension's (exempt)`);
+        continue;
+      }
+      if (!hasBuiltin) {
+        console.log(`FAIL: ${entry.id} has no skills/builtin/${entry.id}.js and is not in OTHER_SURFACE; add the builtin or list it`);
+        continue;
+      }
+      if (OTHER_SURFACE.has(entry.id)) {
+        console.log(`FAIL: ${entry.id} is listed in OTHER_SURFACE but skills/builtin/${entry.id}.js exists; remove it from the list`);
+        continue;
+      }
+      if (keys.length === 0 || IMPERATIVE_ONLY.has(entry.id)) {
+        console.log(`PASS: ${entry.id} is triggered imperatively, not by a stored setting (exempt)`);
         continue;
       }
       const hasEnablePath = keys.some(k => contentCode.includes(k));
@@ -1042,7 +1074,7 @@ server.listen(PORT, async () => {
     // (d) wcagRiskyFixes key in registry settingsMeta
     // Canonical registry moved into the toolkit (skills/registry.js is a
   // re-export shim) — static source checks read the canonical file.
-  const registryPath = path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js');
+  const registryPath = toolkitFile('registry', 'tools.js');
     const registryCode = fs.readFileSync(registryPath, 'utf8');
     if (registryCode.includes('wcagRiskyFixes')) {
       console.log('PASS: registry.js contains wcagRiskyFixes setting key');
@@ -1217,7 +1249,7 @@ server.listen(PORT, async () => {
     }
 
     // (d) quickStart: false in registry for voice-commands
-    const registryCode = fs.readFileSync(path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js'), 'utf8');
+    const registryCode = fs.readFileSync(toolkitFile('registry', 'tools.js'), 'utf8');
     // Find the voice-commands entry and check quickStart
     const vcEntryMatch = registryCode.match(/id:\s*'voice-commands'[\s\S]*?(?=\},\s*\{|\}\s*\])/);
     if (vcEntryMatch && /quickStart:\s*false/.test(vcEntryMatch[0])) {
